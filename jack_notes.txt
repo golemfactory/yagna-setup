@@ -152,6 +152,10 @@ ya-provider run
 Starting the requestor:
 cd to requestor's folder:
 
+and run yagna on requestor's node:
+
+yagna service run
+
 Note: while we can run yagna commands as a requestor from any location (./binaries folder is in the PATH), however when you start it, you want to run with full config, so you need to start it in the requestor's folder.
 
 6. Running examples.
