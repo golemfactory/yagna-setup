@@ -95,6 +95,17 @@ The environment will use a central router (by default - which can be changed).
 Note: If you installed Yagna on this system using a standard installer before, you have the following components installed and in your PATH:
 gftp, yagna, ya-provider, golemsp. 
 
+Note: *
+You should remove whole standard yagna isntallation component:
+
+rm ~/.local/bin/yagna
+rm ~/.local/bin/golemsp
+rm ~/.local/bin/ya-provider
+rm -rf ~/.local/share/yagna
+rm -rf ~/.local/share/ya-installer
+rm -rf ~/.local/share/ya-provider
+rm -rf ~/.local/lib/yagna
+
 By default, they are "installed" in /usr/bin. (They are in the ya-installer directory, in /usr/bin there are links).
 Please remove them or change the order in the PATH variable so the ./binaries folder is before /usr/bin.
 
