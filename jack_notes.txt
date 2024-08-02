@@ -44,6 +44,8 @@ sudo apt autoremove
 
 3. Cloning of repos
 
+cd yagna setup
+
 Run the `prepare.sh` script.
 
 4. Building components.
