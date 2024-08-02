@@ -140,7 +140,7 @@ Run:
 
 Note: for older yagna, before running ya-provider you need to initialize the payment driver:
 
-yagna payment init --as-receiver --network holesky
+yagna payment init --receiver --network holesky
 
 Run:
 ya-provider run
