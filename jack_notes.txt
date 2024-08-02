@@ -12,8 +12,9 @@ Setting the test environment
 0. Prerequisites:
 - system with Ubuntu (tested on 22.04 LTS)
 - git installed
-- docker installed
-- cargo installed
+- docker installed and user added to docker group
+  (sudo usermod -aG docker <username> + logout and login)
+- cmake installed
 
 1. Preparation:
 Clone this repo. Scripts were tested on Ubuntu.

@@ -6,6 +6,12 @@
 
 # Install build dependencies (especially for ya-runtime-vm)
 
+Install docker - make sure to have user access to docker (add user to docker group)
+
+For example here:
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
+
+
 Install rust
 ```bash
 curl https://sh.rustup.rs -sSf | sh
@@ -15,6 +21,7 @@ rustup target add x86_64-unknown-linux-musl
 
 ```bash
 sudo apt-get update
+sudo apt-get install cmake
 sudo apt-get install git-lfs 
 sudo apt-get install libssl-dev
 sudo apt-get install build-essential
