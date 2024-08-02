@@ -170,7 +170,7 @@ npm install
 
 and run the example:
 
-node index.mjs 
+node index.js 
 
 
 7. Other
