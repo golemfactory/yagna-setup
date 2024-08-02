@@ -19,7 +19,7 @@ Setting the test environment
 1. Preparation:
 Clone this repo. Scripts were tested on Ubuntu.
 ```
-git clone scx1332/yagna-setup.git
+git clone golemfactory/yagna-setup.git
 ```
 
 sudo adduser $USER kvm
