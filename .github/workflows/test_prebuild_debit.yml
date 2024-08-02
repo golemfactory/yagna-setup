@@ -129,6 +129,8 @@ jobs:
       - name: Prepare logs
         if: always()
         run: |
+          # remove image cache from upload
+          rm -r golem/provider_0/providerdir/exe-unit/cache
           tar --zstd -cf data_${{ matrix.id }}.tar.zst examples/debitnotetest/log golem/requestor/yagnadir golem/provider_0/providerdir golem/provider_0/yagnadir
 
       - name: Upload logs
