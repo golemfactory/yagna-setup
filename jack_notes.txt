@@ -167,8 +167,11 @@ Install node (hint nvm will let you switch node version: nvm install --lts)
 CD to the example folder
 install libraries:
 npm install
-`node index.mjs` 
-to run the examples
+
+and run the example:
+
+node index.mjs 
+
 
 7. Other
 
