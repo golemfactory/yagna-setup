@@ -203,10 +203,25 @@ async function connectAndRun(glm) {
 
   const rental = await glm.oneOf({ order });
 
-  const exe = await rental.getExeUnit();
+  let exe = await rental.getExeUnit();
   console.log(`Got exeUnit: ${getTimeStamp()}`);
 
   await exe.run("echo Hello, Golem!");
+
+  // this is hack using low level api to close the original
+  // activity and create a new one
+
+  let activity = exe.activity;
+  let agreement = rental.agreement;
+
+  //console.log(activity, agreement);
+
+  await glm.activity.destroyActivity(activity);
+
+  activity = await glm.activity.createActivity(agreement);
+  exe = await glm.activity.createExeUnit(activity);
+
+  // console.log((await exe.run("echo Hello, Golem 👋!")).stdout);
 
   console.log("Started testing provider %s", exe.provider.name);
 
