@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "tsx src/index.ts",
+        "start": "tsnode dist/index.ts",
         "build": "tsc",
         "prettier": "prettier --write ."
     },
