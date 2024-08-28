@@ -30,7 +30,7 @@ const LOCKContract = {
   address: config.LockPaymentContract.holeskyAddress,
   abi: abiLock,
 };
-const GLMCOntract = {
+const GLMContract = {
   address: config.GLMContract.holeskyAddress,
   abi: abiGlm,
 };
@@ -57,10 +57,10 @@ export const createAllowance = async () => {
   );
 
   const hash = await walletClient.writeContract({
-    abi: GLMCOntract.abi,
+    abi: GLMContract.abi,
     functionName: "increaseAllowance",
     // @ts-ignore
-    address: GLMCOntract.address,
+    address: GLMContract.address,
     args,
   });
 
@@ -77,10 +77,10 @@ export const checkAllowance = async () => {
   console.log(chalk.blue(`\nChecking allowance for ${args[1]} contract ...`));
 
   const allowance = await publicClient.readContract({
-    abi: GLMCOntract.abi,
+    abi: GLMContract.abi,
     functionName: "allowance",
     // @ts-ignore
-    address: GLMCOntract.address,
+    address: GLMContract.address,
     args,
   });
 
@@ -225,10 +225,10 @@ const clearAllowance = async () => {
   console.log(chalk.yellow(`\nClearing allowance for ${args[0]} contract ...`));
 
   const hash = await walletClient.writeContract({
-    abi: GLMCOntract.abi,
+    abi: GLMContract.abi,
     functionName: "approve",
     // @ts-ignore
-    address: GLMCOntract.address,
+    address: GLMContract.address,
     args,
   });
 
