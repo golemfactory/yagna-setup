@@ -6,7 +6,6 @@ import { GolemNetwork, GolemPaymentError } from "@golem-sdk/golem-js";
 import { pinoPrettyLogger } from "@golem-sdk/pino-logger";
 import { createAllowance } from "./user.js";
 import config from "./config.json" with { type: "json" };
-import { bytesToHex } from 'viem'
 
 
 // publicClient for readContract functions
@@ -15,16 +14,12 @@ const publicClient = createPublicClient({
   transport: http(config.rpcUrl),
 });
 
-const context = {
-  requestorAddress: null,
-};
-
 const getTransactions = async () => {
   //@ts-ignore
-  const block = await publicClient.getBlock({ blockNumber: 2210406n });
+  /*const block = */ await publicClient.getBlock({ blockNumber: 2210406n });
   //console.log(block);
 
-  const transaction = await publicClient.getTransaction({
+  /*const transaction = */ await publicClient.getTransaction({
     hash: "0x473f9c32da5e46ec7945c754dd780026a7fe0c34e007542f3b4586aa4e6955fa",
   });
 
@@ -32,8 +27,7 @@ const getTransactions = async () => {
 
   const context = { unwatch: () => {} };
 
-  //@ts-ignore
-  const mapTransaction = (input) => {
+  const mapTransaction = (input: string) => {
     let code = input.slice(2, 10);
     let output = ["Other transaction", 0];
     switch (code) {
@@ -65,8 +59,7 @@ const getTransactions = async () => {
     return output;
   };
 
-  //@ts-ignore
-  const logProcessor = async (logs) => {
+  const logProcessor = async (logs: any) => {
     for (const log of logs) {
       const txHash = log.transactionHash;
       const transaction = await publicClient.getTransaction({ hash: txHash });
@@ -114,7 +107,7 @@ const getTransactions = async () => {
 import depositData from "./depositData.json" with { type: "json" };
 
 //@ts-ignore
-const observeTransactions = async (requestorAddress) => {
+const observeTransactions = async (requestorAddress: string) => {
   console.log(
     chalk.magenta("Start observing Events on contract"),
     config.LockPaymentContract.holeskyAddress,
@@ -129,7 +122,7 @@ async function main() {
 
   const context = { requestorAddress: null };
 
-  const _observeTransactionFuture = observeTransactions(
+  /*const _observeTransactionFuture = */ observeTransactions(
     context.requestorAddress,
   );
   //await userActions();

@@ -1,4 +1,4 @@
-import {createPublicClient, createWalletClient, http, parseEther, parseGwei} from "viem";
+import {createPublicClient, createWalletClient, http} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { holesky } from "viem/chains";
 import { writeFileSync } from "fs";
@@ -6,7 +6,6 @@ import chalk from "chalk";
 import abiGlm from "./contracts/glmAbi.json" with { type: "json" };
 import abiLock from "./contracts/lockAbi.json" with { type: "json" };
 import config from "./config.json" with { type: "json" };
-import depositData from "./depositData.json";
 
 
 const cryptoMultiplier = Math.pow(10, 18);
@@ -41,7 +40,7 @@ let validToTimestamp =
   new Date().getTime() + config.funder.depositDurationHours * 60 * 60 * 1000;
 
 export const createAllowance = async () => {
-  let amountWei = parseEther(`${budget.amount}`);
+  //let amountWei = parseEther(`${budget.amount}`);
   let allowanceBudget = budget.amount + budget.flatFeeAmount;
 
   const args = [
@@ -222,7 +221,7 @@ const getDepositDetails = async () => {
 };
 
 const clearAllowance = async () => {
-  const args = [LOCKContract.address, BigInt(0 * cryptoMultiplier)];
+  const args = [LOCKContract.address, BigInt(0)];
 
   console.log(chalk.yellow(`\nClearing allowance for ${args[0]} contract ...`));
 
@@ -241,6 +240,7 @@ const clearAllowance = async () => {
   console.log(chalk.yellow(`Allowance cleared with Tx ${hash}.\n`));
 };
 
+
 export const userActions = async () => {
   await checkAllowance();
   await createDeposit();
@@ -248,4 +248,4 @@ export const userActions = async () => {
   await getDepositID();
   await getDepositDetails();
   await clearAllowance();
-};
+}
