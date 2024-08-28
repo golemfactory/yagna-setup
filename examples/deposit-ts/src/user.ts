@@ -1,15 +1,15 @@
-import { createPublicClient, createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { holesky } from "viem/chains";
-import { writeFileSync } from "fs";
+import {createPublicClient, createWalletClient, Hex, http} from "viem";
+import {privateKeyToAccount} from "viem/accounts";
+import {holesky} from "viem/chains";
+import {writeFileSync} from "fs";
 import chalk from "chalk";
-import abiGlm from "./contracts/glmAbi.json" with { type: "json" };
-import abiLock from "./contracts/lockAbi.json" with { type: "json" };
-import config from "./config.json" with { type: "json" };
+import abiGlm from "./contracts/glmAbi.json" with {type: "json"};
+import abiLock from "./contracts/lockAbi.json" with {type: "json"};
+import config from "./config.json" with {type: "json"};
 
 const cryptoMultiplier = Math.pow(10, 18);
-// @ts-ignore
-const funderAccount = privateKeyToAccount(config.funder.privateKey);
+
+const funderAccount = privateKeyToAccount(<Hex>config.funder.privateKey);
 const budget = config.budget;
 
 // walletClient for writeContract functions
@@ -75,8 +75,7 @@ export const checkAllowance = async () => {
     const allowance = await publicClient.readContract({
         abi: GLMContract.abi,
         functionName: "allowance",
-        // @ts-ignore
-        address: GLMContract.address,
+        address: <Hex>GLMContract.address,
         args,
     });
 
@@ -111,11 +110,12 @@ const createDeposit = async () => {
     console.log(chalk.grey(`Using contract at address: ${LOCKContract.address}.`));
 
     const hash = await walletClient.writeContract({
+        address: <Hex>LOCKContract.address,
         abi: LOCKContract.abi,
         functionName: "createDeposit",
-        // @ts-ignore
-        address: LOCKContract.address,
         args,
+        chain: holesky,
+        account: funderAccount,
     });
 
     await publicClient.waitForTransactionReceipt({
