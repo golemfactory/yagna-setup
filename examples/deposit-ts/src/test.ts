@@ -1,4 +1,4 @@
-import {userActions} from "./user.js";
+import { userActions } from "./user.js";
 
 async function main() {
     await userActions();

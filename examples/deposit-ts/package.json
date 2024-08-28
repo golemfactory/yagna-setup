@@ -1,61 +1,61 @@
 {
-  "name": "deposit-ts",
-  "version": "1.0.0",
-  "description": "",
-  "exports": "./src/index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsx src/index.ts",
-    "build": "tsc",
-    "prettier": "prettier --write ."
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@golem-sdk/golem-js": "^3.2.0",
-    "@golem-sdk/pino-logger": "^1.1.0",
-    "chalk": "^5.3.0",
-    "ethers": "^6.13.2",
-    "tsx": "^4.19.0",
-    "viem": "^2.19.9"
-  },
-  "devDependencies": {
-    "globals": "^15.9.0",
-    "prettier": "^3.3.3",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.3.0"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true
+    "name": "deposit-ts",
+    "version": "1.0.0",
+    "description": "",
+    "exports": "./src/index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "tsx src/index.ts",
+        "build": "tsc",
+        "prettier": "prettier --write ."
     },
-    "extends": [
-      "eslint:recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:import/errors",
-      "plugin:import/warnings",
-      "plugin:import/typescript",
-      "plugin:react/recommended",
-      "plugin:jsx-a11y/recommended",
-      "plugin:prettier/recommended"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2020,
-      "sourceType": "module"
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@golem-sdk/golem-js": "^3.2.0",
+        "@golem-sdk/pino-logger": "^1.1.0",
+        "chalk": "^5.3.0",
+        "ethers": "^6.13.2",
+        "tsx": "^4.19.0",
+        "viem": "^2.19.9"
     },
-    "plugins": [
-      "@typescript-eslint",
-      "import",
-      "jsx-a11y",
-      "react",
-      "prettier"
-    ],
-    "rules": {
-      "prettier/prettier": "error"
+    "devDependencies": {
+        "globals": "^15.9.0",
+        "prettier": "^3.3.3",
+        "typescript": "^5.5.4",
+        "typescript-eslint": "^8.3.0"
+    },
+    "eslintConfig": {
+        "root": true,
+        "env": {
+            "node": true
+        },
+        "extends": [
+            "eslint:recommended",
+            "plugin:@typescript-eslint/recommended",
+            "plugin:import/errors",
+            "plugin:import/warnings",
+            "plugin:import/typescript",
+            "plugin:react/recommended",
+            "plugin:jsx-a11y/recommended",
+            "plugin:prettier/recommended"
+        ],
+        "parser": "@typescript-eslint/parser",
+        "parserOptions": {
+            "ecmaVersion": 2020,
+            "sourceType": "module"
+        },
+        "plugins": [
+            "@typescript-eslint",
+            "import",
+            "jsx-a11y",
+            "react",
+            "prettier"
+        ],
+        "rules": {
+            "prettier/prettier": "error"
+        }
     }
-  }
 }
