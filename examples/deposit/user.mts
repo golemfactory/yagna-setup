@@ -3,23 +3,14 @@ import { privateKeyToAccount } from "viem/accounts";
 import { holesky } from "viem/chains";
 import { writeFileSync } from "fs";
 import chalk from "chalk";
+import abiGlm from "./abiGLM.json";
+import abiLock from "./abiLock.json";
+import config from "./config.json";
+import depositData from "./depositData.json";
 
-const config = (await import("./config.json", { with: { type: "json" } }))
-  .default;
-
-const abiGLM = (
-  await import(config.GLMContract.abiPath, {
-    with: { type: "json" },
-  })
-).default;
-
-const abiLOCK = (
-  await import(config.LockPaymentContract.abiPath, {
-    with: { type: "json" },
-  })
-).default;
 
 const cryptoMultiplier = Math.pow(10, 18);
+// @ts-ignore
 const funderAccount = privateKeyToAccount(config.funder.privateKey);
 const budget = config.budget;
 
@@ -38,11 +29,11 @@ const publicClient = createPublicClient({
 
 const LOCKContract = {
   address: config.LockPaymentContract.holeskyAddress,
-  abi: JSON.parse(abiLOCK.result),
+  abi: abiLock,
 };
 const GLMCOntract = {
   address: config.GLMContract.holeskyAddress,
-  abi: JSON.parse(abiGLM.result),
+  abi: abiGlm,
 };
 
 const nonce = Math.floor(Math.random() * config.funder.nonceSpace);
@@ -59,15 +50,18 @@ const createAllowance = async () => {
 
   console.log(
     chalk.blue(
+        // @ts-ignore
       `\nCreating allowance of ${(parseInt(args[1]) / cryptoMultiplier).toFixed(
         2
       )} GLM for ${args[0]} contract ...`
     )
   );
 
+
   const hash = await walletClient.writeContract({
     abi: GLMCOntract.abi,
     functionName: "increaseAllowance",
+    // @ts-ignore
     address: GLMCOntract.address,
     args,
   });
@@ -78,7 +72,6 @@ const createAllowance = async () => {
 
   console.log(chalk.blue(`Allowance successfully created with Tx ${hash}.`));
 };
-await createAllowance();
 
 const checkAllowance = async () => {
   const args = [config.funder.address, LOCKContract.address];
@@ -88,12 +81,14 @@ const checkAllowance = async () => {
   const allowance = await publicClient.readContract({
     abi: GLMCOntract.abi,
     functionName: "allowance",
+    // @ts-ignore
     address: GLMCOntract.address,
     args,
   });
 
   console.log(
     chalk.blue(
+        // @ts-ignore
       `Allowance of ${(parseInt(allowance) / cryptoMultiplier).toFixed(
         2
       )} GLM is set.`
@@ -113,8 +108,10 @@ const createDeposit = async () => {
   console.log(
     chalk.grey(
       `\nCreating deposit of amount: ${(
+          // @ts-ignore
         parseInt(args[2]) / cryptoMultiplier
       ).toFixed(2)} GLM, flatFeeAmount: ${(
+          // @ts-ignore
         parseInt(args[2]) / cryptoMultiplier
       ).toFixed(2)} GLM, for  ${(
         (validToTimestamp - new Date().getTime()) /
@@ -131,6 +128,7 @@ const createDeposit = async () => {
   const hash = await walletClient.writeContract({
     abi: LOCKContract.abi,
     functionName: "createDeposit",
+    // @ts-ignore
     address: LOCKContract.address,
     args,
   });
@@ -154,8 +152,10 @@ const extendDeposit = async () => {
   console.log(
     chalk.grey(
       `\nExtending deposit of additional amount: ${(
+          // @ts-ignore
         parseInt(args[2]) / cryptoMultiplier
       ).toFixed(2)} GLM, flatFeeAmount: ${(
+          // @ts-ignore
         parseInt(args[2]) / cryptoMultiplier
       ).toFixed(2)} GLM, for ${(
         (validToTimestamp - new Date().getTime()) /
@@ -172,6 +172,7 @@ const extendDeposit = async () => {
   const hash = await walletClient.writeContract({
     abi: LOCKContract.abi,
     functionName: "extendDeposit",
+    // @ts-ignore
     address: LOCKContract.address,
     args,
   });
@@ -185,6 +186,7 @@ const extendDeposit = async () => {
 
 const getDepositID = async () => {
   const depositID = await publicClient.readContract({
+    // @ts-ignore
     address: LOCKContract.address,
     abi: LOCKContract.abi,
     functionName: "idFromNonceAndFunder",
@@ -200,6 +202,7 @@ const getDepositID = async () => {
 
 const getDepositDetails = async () => {
   const deposit = await publicClient.readContract({
+    // @ts-ignore
     address: LOCKContract.address,
     abi: LOCKContract.abi,
     functionName: "getDepositByNonce",
@@ -211,9 +214,11 @@ const getDepositDetails = async () => {
     deposit,
     chalk.grey(` available on contract ${LOCKContract.address}.`)
   );
-
+  // @ts-ignore
   const depositData = {
+    // @ts-ignore
     amount: parseInt(deposit.amount) / cryptoMultiplier,
+    // @ts-ignore
     id: deposit.id.toString(),
   };
 
@@ -228,6 +233,7 @@ const clearAllowance = async () => {
   const hash = await walletClient.writeContract({
     abi: GLMCOntract.abi,
     functionName: "approve",
+    // @ts-ignore
     address: GLMCOntract.address,
     args,
   });
