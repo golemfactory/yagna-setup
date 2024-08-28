@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http } from "viem";
+import {createPublicClient, createWalletClient, http, parseEther, parseGwei} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { holesky } from "viem/chains";
 import { writeFileSync } from "fs";
@@ -7,6 +7,7 @@ import abiGlm from "./contracts/glmAbi.json" with { type: "json" };
 import abiLock from "./contracts/lockAbi.json" with { type: "json" };
 import config from "./config.json" with { type: "json" };
 import depositData from "./depositData.json";
+
 
 const cryptoMultiplier = Math.pow(10, 18);
 // @ts-ignore
@@ -40,6 +41,7 @@ let validToTimestamp =
   new Date().getTime() + config.funder.depositDurationHours * 60 * 60 * 1000;
 
 export const createAllowance = async () => {
+  let amountWei = parseEther(`${budget.amount}`);
   let allowanceBudget = budget.amount + budget.flatFeeAmount;
 
   const args = [

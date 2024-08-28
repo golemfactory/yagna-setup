@@ -6,6 +6,8 @@ import { GolemNetwork, GolemPaymentError } from "@golem-sdk/golem-js";
 import { pinoPrettyLogger } from "@golem-sdk/pino-logger";
 import { createAllowance } from "./user.js";
 import config from "./config.json" with { type: "json" };
+import { bytesToHex } from 'viem'
+
 
 // publicClient for readContract functions
 const publicClient = createPublicClient({
