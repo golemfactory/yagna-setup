@@ -1,10 +1,10 @@
-import { createPublicClient, http, parseAbi } from "viem";
+import { Address, createPublicClient, Hex, http, parseAbi, WatchEventReturnType } from "viem";
 import chalk from "chalk";
 import { holesky } from "viem/chains";
 
 import { GolemNetwork, GolemPaymentError } from "@golem-sdk/golem-js";
 import { pinoPrettyLogger } from "@golem-sdk/pino-logger";
-import { createAllowance } from "./user.js";
+import { userActions } from "./user.js";
 import config from "./config.json" with { type: "json" };
 
 // publicClient for readContract functions
@@ -13,23 +13,13 @@ const publicClient = createPublicClient({
     transport: http(config.rpcUrl),
 });
 
-const getTransactions = async () => {
-    //@ts-ignore
-    /*const block = */
-    await publicClient.getBlock({ blockNumber: 2210406n });
-    //console.log(block);
+interface ObserveTransactionsContext {
+    observedAddress: Address;
+    spenderAddress: Address | null;
+    unwatch: WatchEventReturnType;
+}
 
-    /*const transaction = */
-    await publicClient.getTransaction({
-        hash: "0x473f9c32da5e46ec7945c754dd780026a7fe0c34e007542f3b4586aa4e6955fa",
-    });
-
-    //console.log(transaction);
-
-    const context = {
-        unwatch: () => {},
-    };
-
+async function observeTransactionEvents(context: ObserveTransactionsContext) {
     const mapTransaction = (input: string) => {
         let code = input.slice(2, 10);
         let output = ["Other transaction", 0];
@@ -75,7 +65,7 @@ const getTransactions = async () => {
             if (
                 // if deposit is closed by our requestor, stop observing
                 close == 1 &&
-                transaction.from == "0x7459dbaf9b1b1b19197eadcd3f66a3ec93504589"
+                transaction.from == context.observedAddress
             ) {
                 context.unwatch();
             }
@@ -103,28 +93,24 @@ const getTransactions = async () => {
             "event DepositTransfer(uint256 indexed id, address spender, address recipient,uint128 amount)",
         ]),
 
-        //@ts-ignore
-        address: config.LockPaymentContract.holeskyAddress,
+        address: <Hex>config.LockPaymentContract.holeskyAddress,
     });
-};
+}
 import depositData from "./depositData.json" with { type: "json" };
 
-//@ts-ignore
-const observeTransactions = async (requestorAddress: string) => {
-    console.log(chalk.magenta("Start observing Events on contract"), config.LockPaymentContract.holeskyAddress);
-
-    //@ts-ignore
-    getTransactions(requestorAddress);
-};
-
 async function main() {
-    await createAllowance();
+    const context = {
+        observedAddress: <Address>config.LockPaymentContract.holeskyAddress,
+        spenderAddress: null,
+        unwatch: () => {
+            throw new Error("Cannot call unwatch before watch");
+        },
+    };
 
-    const context = { requestorAddress: null };
+    console.log(chalk.magenta(`Start observing Events on contract: ${context.observedAddress}`));
+    const observerTransactionFuture = observeTransactionEvents(context);
 
-    /*const _observeTransactionFuture = */
-    observeTransactions(context.requestorAddress);
-    //await userActions();
+    await userActions();
 
     // do the test
     (async () => {
@@ -154,7 +140,7 @@ async function main() {
                 // paymentPlatform: 'erc20-holesky-tglm'
             });
 
-            context.requestorAddress = allocation.address;
+            context.observedAddress = <Address>allocation.address;
 
             const order1 = {
                 demand: {
@@ -223,9 +209,9 @@ async function main() {
             await glm.disconnect();
         }
     })().catch(console.error);
-}
 
-main().then();
+    await observerTransactionFuture;
+}
 
 main()
     .then(() => console.log("done"))

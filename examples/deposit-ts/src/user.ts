@@ -1,11 +1,11 @@
-import {createPublicClient, createWalletClient, Hex, http} from "viem";
-import {privateKeyToAccount} from "viem/accounts";
-import {holesky} from "viem/chains";
-import {writeFileSync} from "fs";
+import { createPublicClient, createWalletClient, formatEther, Hex, http, parseEther } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { holesky } from "viem/chains";
+import { writeFileSync } from "fs";
 import chalk from "chalk";
-import abiGlm from "./contracts/glmAbi.json" with {type: "json"};
-import abiLock from "./contracts/lockAbi.json" with {type: "json"};
-import config from "./config.json" with {type: "json"};
+import abiGlm from "./contracts/glmAbi.json" with { type: "json" };
+import abiLock from "./contracts/lockAbi.json" with { type: "json" };
+import config from "./config.json" with { type: "json" };
 
 const cryptoMultiplier = Math.pow(10, 18);
 
@@ -37,37 +37,34 @@ const GLMContract = {
 const nonce = Math.floor(Math.random() * config.funder.nonceSpace);
 let validToTimestamp = new Date().getTime() + config.funder.depositDurationHours * 60 * 60 * 1000;
 
-export const createAllowance = async () => {
-    //let amountWei = parseEther(`${budget.amount}`);
-    let allowanceBudget = budget.amount + budget.flatFeeAmount;
-
-    const args = [LOCKContract.address, BigInt(allowanceBudget * cryptoMultiplier)];
+async function createAllowance() {
+    let amountWei = parseEther(`${budget.amount}`);
+    let flatFeeAmountWei = parseEther(`${budget.flatFeeAmount}`);
+    let allowanceBudget = amountWei + flatFeeAmountWei;
 
     console.log(
         chalk.blue(
-            // @ts-ignore
-            `\nCreating allowance of ${(parseInt(args[1]) / cryptoMultiplier).toFixed(
-                2,
-            )} GLM for ${args[0]} contract ...`,
+            `\nCreating allowance of ${formatEther(allowanceBudget)} GLM for ${LOCKContract.address} contract ...`,
         ),
     );
 
     const hash = await walletClient.writeContract({
+        address: <Hex>GLMContract.address,
         abi: GLMContract.abi,
         functionName: "increaseAllowance",
-        // @ts-ignore
-        address: GLMContract.address,
-        args,
+        args: [LOCKContract.address, allowanceBudget],
+        chain: walletClient.chain,
+        account: walletClient.account,
     });
 
-    await publicClient.waitForTransactionReceipt({
+    const receipt = await publicClient.waitForTransactionReceipt({
         hash,
     });
 
-    console.log(chalk.blue(`Allowance successfully created with Tx ${hash}.`));
-};
+    console.log(chalk.blue(`Allowance successfully created with Tx ${receipt.transactionHash}.`));
+}
 
-export const checkAllowance = async () => {
+const checkAllowance = async () => {
     const args = [config.funder.address, LOCKContract.address];
 
     console.log(chalk.blue(`\nChecking allowance for ${args[1]} contract ...`));
@@ -216,6 +213,7 @@ const clearAllowance = async () => {
 };
 
 export const userActions = async () => {
+    await createAllowance();
     await checkAllowance();
     await createDeposit();
     await extendDeposit();
