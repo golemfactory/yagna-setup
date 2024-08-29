@@ -27,7 +27,7 @@ const publicClient = createPublicClient({
 });
 
 const LOCK_CONTRACT = {
-    address: config.LockPaymentContract.holeskyAddress,
+    address: config.lockPaymentContract.holeskyAddress,
     abi: abiLock,
 };
 const GLM_CONTRACT = {

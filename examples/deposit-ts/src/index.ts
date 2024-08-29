@@ -29,7 +29,7 @@ interface ObserveTransactionsContext {
 
 /*
 const LOCK_CONTRACT = getContract({
-    address: <Address>config.LockPaymentContract.holeskyAddress,
+    address: <Address>config.lockPaymentContract.holeskyAddress,
     abi: abiLock,
     //@ts-expect-error I don't now how to satisfy this crazy types
     client: publicClient,
@@ -85,13 +85,13 @@ async function observeTransactionEvents(context: ObserveTransactionsContext) {
             "event DepositTransfer(uint256 indexed id, address spender, address recipient,uint128 amount)",
         ]),
 
-        address: <Hex>config.LockPaymentContract.holeskyAddress,
+        address: <Hex>config.lockPaymentContract.holeskyAddress,
     });
 }
 
 async function spawnContractObserver() {
     const context = {
-        observedAddress: <Address>config.LockPaymentContract.holeskyAddress,
+        observedAddress: <Address>config.lockPaymentContract.holeskyAddress,
         spenderAddress: null,
         unwatch: () => {
             throw new Error("Cannot call unwatch before watch");
@@ -125,7 +125,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
         await glm.connect();
 
         const deposit = {
-            contract: config.LockPaymentContract.holeskyAddress,
+            contract: config.lockPaymentContract.holeskyAddress,
             id: BigInt(depositData.id).toString(16),
         };
 
