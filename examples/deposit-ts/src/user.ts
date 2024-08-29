@@ -1,13 +1,12 @@
-import { createPublicClient, createWalletClient, formatEther, Hex, http, parseEther } from "viem";
+import { Address, createPublicClient, createWalletClient, formatEther, Hex, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { holesky } from "viem/chains";
-import { writeFileSync } from "fs";
 import chalk from "chalk";
-import abiGlm from "./contracts/glmAbi.json" with { type: "json" };
-import abiLock from "./contracts/lockAbi.json" with { type: "json" };
-import config from "./config.json" with { type: "json" };
-
-const cryptoMultiplier = Math.pow(10, 18);
+const abiGlm = await readJsonFile("./contracts/glmAbi.json");
+const abiLock = await readJsonFile("./contracts/lockAbi.json");
+import config from "./config.js";
+import { writeFile } from "fs/promises";
+import {readJsonFile} from "./utils.js";
 
 const funderAccount = privateKeyToAccount(<Hex>config.funder.privateKey);
 const budget = config.budget;
@@ -69,7 +68,7 @@ const checkAllowance = async () => {
 
     console.log(chalk.blue(`\nChecking allowance for ${args[1]} contract ...`));
 
-    const allowance = await publicClient.readContract({
+    const allowance = <BigInt>await publicClient.readContract({
         abi: GLMContract.abi,
         functionName: "allowance",
         address: <Hex>GLMContract.address,
@@ -78,8 +77,7 @@ const checkAllowance = async () => {
 
     console.log(
         chalk.blue(
-            // @ts-ignore
-            `Allowance of ${(parseInt(allowance) / cryptoMultiplier).toFixed(2)} GLM is set.`,
+            `Allowance of ${parseEther(allowance.toString())} GLM is set.`,
         ),
     );
 };
@@ -87,21 +85,16 @@ const checkAllowance = async () => {
 const createDeposit = async () => {
     const args = [
         BigInt(nonce),
-        config.spender.address,
-        BigInt(budget.amount * cryptoMultiplier),
-        BigInt(budget.flatFeeAmount * cryptoMultiplier),
+        <Address>config.spender.address,
+        parseEther(`${budget.amount}`),
+        parseEther(`${budget.flatFeeAmount}`),
         BigInt(validToTimestamp),
     ];
 
     console.log(
         chalk.grey(
-            `\nCreating deposit of amount: ${
-                // @ts-ignore
-                (parseInt(args[2]) / cryptoMultiplier).toFixed(2)
-            } GLM, flatFeeAmount: ${
-                // @ts-ignore
-                (parseInt(args[2]) / cryptoMultiplier).toFixed(2)
-            } GLM, for  ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
+            `\nCreating deposit of amount: ${formatEther(<bigint>args[2])} GLM, 
+            flatFeeAmount: ${formatEther(<bigint>args[3])} GLM, for  ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
         ),
     );
     console.log(chalk.grey(`Using contract at address: ${LOCKContract.address}.`));
@@ -111,13 +104,22 @@ const createDeposit = async () => {
         abi: LOCKContract.abi,
         functionName: "createDeposit",
         args,
-        chain: holesky,
-        account: funderAccount,
+        chain: walletClient.chain,
+        account: walletClient.account,
     });
 
     await publicClient.waitForTransactionReceipt({
         hash,
     });
+
+    const depositId = await getDepositID();
+
+    const depositData = {
+        id: "0x" + depositId.toString(16),
+        amount: formatEther(<bigint>args[2]),
+        feeAmount: formatEther(<bigint>args[3])
+    }
+    await writeFile(config.depositFileName, JSON.stringify(depositData, null, 4));
 
     console.log(chalk.grey(`Deposit successfully created with Tx ${hash}.`));
 };
@@ -133,13 +135,9 @@ const extendDeposit = async () => {
 
     console.log(
         chalk.grey(
-            `\nExtending deposit of additional amount: ${
-                // @ts-ignore
-                (parseInt(args[2]) / cryptoMultiplier).toFixed(2)
-            } GLM, flatFeeAmount: ${
-                // @ts-ignore
-                (parseInt(args[2]) / cryptoMultiplier).toFixed(2)
-            } GLM, for ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
+            `\nExtending deposit of additional amount:
+             ${formatEther(<bigint>args[2])}  GLM, 
+             flatFeeAmount: ${formatEther(<bigint>args[3])}  GLM, for ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
         ),
     );
     console.log(chalk.grey(`Using contract at address: ${LOCKContract.address}.`));
@@ -147,9 +145,10 @@ const extendDeposit = async () => {
     const hash = await walletClient.writeContract({
         abi: LOCKContract.abi,
         functionName: "extendDeposit",
-        // @ts-ignore
-        address: LOCKContract.address,
+        address: <Address>LOCKContract.address,
         args,
+        chain: walletClient.chain,
+        account: walletClient.account,
     });
 
     await publicClient.waitForTransactionReceipt({
@@ -160,36 +159,35 @@ const extendDeposit = async () => {
 };
 
 const getDepositID = async () => {
-    const depositID = await publicClient.readContract({
-        // @ts-ignore
-        address: LOCKContract.address,
+    const depositID = <bigint>await publicClient.readContract({
+        address: <Address>LOCKContract.address,
         abi: LOCKContract.abi,
         functionName: "idFromNonceAndFunder",
         args: [BigInt(nonce), config.funder.address],
     });
 
     console.log(chalk.grey(`\nDepositID: ${depositID} available on contract at address: ${LOCKContract.address}.`));
+    return depositID;
 };
 
+
+interface DepositData {
+    amount: bigint;
+    id: string;
+}
 const getDepositDetails = async () => {
-    const deposit = await publicClient.readContract({
-        // @ts-ignore
-        address: LOCKContract.address,
+    const deposit = <DepositData>await publicClient.readContract({
+        address: <Address>LOCKContract.address,
         abi: LOCKContract.abi,
         functionName: "getDepositByNonce",
         args: [BigInt(nonce), config.funder.address],
     });
 
     console.log(chalk.grey(`\nDeposit of `), deposit, chalk.grey(` available on contract ${LOCKContract.address}.`));
-    // @ts-ignore
     const depositData = {
-        // @ts-ignore
-        amount: parseInt(deposit.amount) / cryptoMultiplier,
-        // @ts-ignore
+        amount: formatEther(deposit.amount),
         id: deposit.id.toString(),
     };
-
-    writeFileSync(config.depositFileName, JSON.stringify(depositData));
 };
 
 const clearAllowance = async () => {
@@ -200,9 +198,10 @@ const clearAllowance = async () => {
     const hash = await walletClient.writeContract({
         abi: GLMContract.abi,
         functionName: "approve",
-        // @ts-ignore
-        address: GLMContract.address,
+        address: <Address>GLMContract.address,
         args,
+        chain: walletClient.chain,
+        account: walletClient.account,
     });
 
     await publicClient.waitForTransactionReceipt({
@@ -218,6 +217,5 @@ export const userActions = async () => {
     await createDeposit();
     await extendDeposit();
     await getDepositID();
-    await getDepositDetails();
     await clearAllowance();
 };

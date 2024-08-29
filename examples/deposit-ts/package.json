@@ -7,6 +7,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "tsc && node dist/index.js",
+        "start-ts": "tsx src/index.ts",
         "debug": "node dist/index.js",
         "build": "tsc",
         "prettier": "prettier --write ."
