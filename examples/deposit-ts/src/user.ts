@@ -6,7 +6,7 @@ const abiGlm = await readJsonFile("./contracts/glmAbi.json");
 const abiLock = await readJsonFile("./contracts/lockAbi.json");
 import config from "./config.js";
 import { writeFile } from "fs/promises";
-import {readJsonFile} from "./utils.js";
+import { readJsonFile } from "./utils.js";
 
 const funderAccount = privateKeyToAccount(<Hex>config.funder.privateKey);
 const budget = config.budget;
@@ -75,11 +75,7 @@ const checkAllowance = async () => {
         args,
     });
 
-    console.log(
-        chalk.blue(
-            `Allowance of ${parseEther(allowance.toString())} GLM is set.`,
-        ),
-    );
+    console.log(chalk.blue(`Allowance of ${parseEther(allowance.toString())} GLM is set.`));
 };
 
 const createDeposit = async () => {
@@ -117,8 +113,8 @@ const createDeposit = async () => {
     const depositData = {
         id: "0x" + depositId.toString(16),
         amount: formatEther(<bigint>args[2]),
-        feeAmount: formatEther(<bigint>args[3])
-    }
+        feeAmount: formatEther(<bigint>args[3]),
+    };
     await writeFile(config.depositFileName, JSON.stringify(depositData, null, 4));
 
     console.log(chalk.grey(`Deposit successfully created with Tx ${hash}.`));
@@ -170,7 +166,6 @@ const getDepositID = async () => {
     return depositID;
 };
 
-
 interface DepositData {
     amount: bigint;
     id: string;
@@ -211,7 +206,7 @@ const clearAllowance = async () => {
     console.log(chalk.yellow(`Allowance cleared with Tx ${hash}.\n`));
 };
 
-export const userActions = async () => {
+export const runUserActions = async () => {
     await createAllowance();
     await checkAllowance();
     await createDeposit();

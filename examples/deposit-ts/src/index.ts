@@ -4,9 +4,9 @@ import { holesky } from "viem/chains";
 
 import { GolemNetwork, GolemPaymentError } from "@golem-sdk/golem-js";
 import { pinoPrettyLogger } from "@golem-sdk/pino-logger";
-import { userActions } from "./user.js";
+import { runUserActions } from "./user.js";
 import config from "./config.js";
-import {readJsonFile} from "./utils.js";
+import { readJsonFile } from "./utils.js";
 
 // publicClient for readContract functions
 const publicClient = createPublicClient({
@@ -98,7 +98,7 @@ async function observeTransactionEvents(context: ObserveTransactionsContext) {
     });
 }
 
-async function main() {
+async function spawnContractObserver() {
     const context = {
         observedAddress: <Address>config.LockPaymentContract.holeskyAddress,
         spenderAddress: null,
@@ -108,9 +108,14 @@ async function main() {
     };
 
     console.log(chalk.magenta(`Start observing Events on contract: ${context.observedAddress}`));
-    const observerTransactionFuture = observeTransactionEvents(context);
+    const observerFuture = observeTransactionEvents(context);
+    return {
+        context,
+        observerFuture,
+    };
+}
 
-    await userActions();
+async function runOperator(observerContext: ObserveTransactionsContext) {
     const depositData = await readJsonFile("./depositData.json");
 
     // do the test
@@ -140,7 +145,7 @@ async function main() {
             // paymentPlatform: 'erc20-holesky-tglm'
         });
 
-        context.observedAddress = <Address>allocation.address;
+        observerContext.observedAddress = <Address>allocation.address;
 
         const order1 = {
             demand: {
@@ -205,16 +210,20 @@ async function main() {
         } else {
             console.error("Failed to run the example", err);
         }
+        throw err;
     } finally {
         await glm.disconnect();
     }
-
-    await observerTransactionFuture;
 }
 
-main()
-    .then(() => console.log("done"))
-    .catch((e) => {
-        console.error(e);
-        process.exit(1);
-    });
+/* step 1 - run observer on contract */
+const obs = await spawnContractObserver();
+
+/* step 2 - run user actions (actions performed by the funder) */
+await runUserActions();
+
+/* step 3 - run operator actions (actions performed by the spender) */
+await runOperator(obs.context);
+
+/* step 4 - wait for observer to finish listening for deposit close, which ends example */
+await obs.observerFuture;
