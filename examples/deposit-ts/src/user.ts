@@ -31,7 +31,7 @@ const LOCK_CONTRACT = {
     abi: abiLock,
 };
 const GLM_CONTRACT = {
-    address: config.GLM_CONTRACT.holeskyAddress,
+    address: config.glmContract.holeskyAddress,
     abi: abiGlm,
 };
 
