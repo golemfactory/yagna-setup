@@ -1,4 +1,11 @@
-import { Address, createPublicClient, Hex, http, parseAbi, WatchEventReturnType } from "viem";
+import {
+    Address,
+    createPublicClient, decodeFunctionData,
+    Hex,
+    http,
+    parseAbi,
+    WatchEventReturnType
+} from "viem";
 import chalk from "chalk";
 import { holesky } from "viem/chains";
 
@@ -7,7 +14,7 @@ import { pinoPrettyLogger } from "@golem-sdk/pino-logger";
 import { runUserActions } from "./user.js";
 import config from "./config.js";
 import { readJsonFile } from "./utils.js";
-
+const abiLock = await readJsonFile("./contracts/lockAbi.json");
 // publicClient for readContract functions
 const publicClient = createPublicClient({
     chain: holesky,
@@ -20,69 +27,53 @@ interface ObserveTransactionsContext {
     unwatch: WatchEventReturnType;
 }
 
+/*
+const LOCK_CONTRACT = getContract({
+    address: <Address>config.LockPaymentContract.holeskyAddress,
+    abi: abiLock,
+    //@ts-expect-error I don't now how to satisfy this crazy types
+    client: publicClient,
+})
+*/
+
 async function observeTransactionEvents(context: ObserveTransactionsContext) {
-    const mapTransaction = (input: string) => {
-        let code = input.slice(2, 10);
-        let output = ["Other transaction", 0];
-        switch (code) {
-            case "ac658a48": // extend deposit
-                output = ["extend deposit", 0];
-                break;
-            case "519f5dad": // create deposit
-                output = ["createDeposit", 0];
-                break;
-            case "ee7b7ad8": //deposit single transfer
-                output = ["depositSingleTransfer", 0];
-                break;
-            case "83b24c52": // close deposit
-                output = ["closeDeposit", 1];
-                break;
-            case "ee7b7ad8": // deposit transfer
-                output = ["deposit transfer", 0];
-                break;
-            case "fbe1e331": // deposit single transfer and close
-                output = ["depositSingleTransferAndClose", 1];
-                break;
-            case "d61a0956": // deposit transfer and close
-                output = ["depositTransferAndClose", 1];
-                break;
-            case "841dbca6": // terminate deposit
-                output = ["terminateDeposit", 2];
-                break;
-        }
-        return output;
-    };
-
-    const logProcessor = async (logs: any) => {
-        for (const log of logs) {
-            const txHash = log.transactionHash;
-            const transaction = await publicClient.getTransaction({ hash: txHash });
-            const [eventName, close] = mapTransaction(transaction.input);
-            console.log(chalk.magenta("\ncall:"), eventName);
-            console.log(chalk.magenta("event:"), log.eventName);
-            console.log(chalk.magenta("from:"), transaction.from);
-            console.log(chalk.magenta("hash:"), transaction.hash, "\n");
-
-            if (
-                // if deposit is closed by our requestor, stop observing
-                close == 1 &&
-                transaction.from == context.observedAddress
-            ) {
-                context.unwatch();
-            }
-
-            if (
-                // if deposit is terminated by our requestor, stop observing
-                close == 2 &&
-                transaction.from == config.funder.address
-            ) {
-                context.unwatch();
-            }
-        }
-    };
-
     context.unwatch = publicClient.watchEvent({
-        onLogs: (logs) => logProcessor(logs),
+        onLogs: async (logs) => {
+
+            for (const log of logs) {
+                const txHash = log.transactionHash;
+                const transaction = await publicClient.getTransaction({ hash: txHash });
+
+                const parsedMethod = decodeFunctionData({
+                    abi: abiLock,
+                    data: transaction.input
+                });
+
+
+                const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
+                console.log(chalk.magenta("\ncall:", functionNamePlusArgs));
+                console.log(chalk.magenta("event:"), log.eventName);
+                console.log(chalk.magenta("from:"), transaction.from);
+                console.log(chalk.magenta("hash:"), transaction.hash, "\n");
+
+                if (
+                    // if deposit is closed by our requestor, stop observing
+                    parsedMethod.functionName.toLowerCase().includes("close") &&
+                    transaction.from == context.observedAddress
+                ) {
+                    console.log(chalk.magenta("Stop observing events\n"));
+                    context.unwatch();
+                }
+
+                if (
+                    // if deposit is terminated by our requestor, stop observing
+                    parsedMethod.functionName == "terminateDeposit" &&
+                    transaction.from == config.funder.address
+                ) {
+                    context.unwatch();
+                }
+            }
+        },
         //event: parseAbi("event DepositClosed(uint256 indexed id, address spender)"),
 
         events: parseAbi([
@@ -180,7 +171,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
             },
         };
 
-        //@ts-ignore
+        //@ts-expect-error - some weird type check to resolve
         const rental1 = await glm.oneOf({ order: order1 });
 
         await rental1
@@ -189,7 +180,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
             .then((res) => console.log(chalk.inverse("\n", res.stdout)));
         // do some more work
         await rental1.stopAndFinalize();
-        //@ts-ignore
+        //@ts-expect-error - some weird type check to resolve
         const rental2 = await glm.oneOf({ order: order2 });
 
         await rental2
