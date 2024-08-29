@@ -1,11 +1,4 @@
-import {
-    Address,
-    createPublicClient, decodeFunctionData,
-    Hex,
-    http,
-    parseAbi,
-    WatchEventReturnType
-} from "viem";
+import { Address, createPublicClient, decodeFunctionData, Hex, http, parseAbi, WatchEventReturnType } from "viem";
 import chalk from "chalk";
 import { holesky } from "viem/chains";
 
@@ -39,16 +32,14 @@ const LOCK_CONTRACT = getContract({
 async function observeTransactionEvents(context: ObserveTransactionsContext) {
     context.unwatch = publicClient.watchEvent({
         onLogs: async (logs) => {
-
             for (const log of logs) {
                 const txHash = log.transactionHash;
                 const transaction = await publicClient.getTransaction({ hash: txHash });
 
                 const parsedMethod = decodeFunctionData({
                     abi: abiLock,
-                    data: transaction.input
+                    data: transaction.input,
                 });
-
 
                 const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
                 console.log(chalk.magenta("\ncall:", functionNamePlusArgs));

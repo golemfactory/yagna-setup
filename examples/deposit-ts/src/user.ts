@@ -91,8 +91,7 @@ const createDeposit = async () => {
 
     console.log(
         chalk.grey(
-            `\nCreating deposit of amount: ${formatEther(<bigint>args[2])} GLM, \
-            flatFeeAmount: ${formatEther(<bigint>args[3])} GLM, for  ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
+            `\nCreating deposit of amount: ${formatEther(<bigint>args[2])} GLM, flatFeeAmount: ${formatEther(<bigint>args[3])} GLM, for  ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
         ),
     );
     console.log(chalk.grey(`Using contract at address: ${LOCK_CONTRACT.address}.`));
@@ -133,9 +132,7 @@ const extendDeposit = async () => {
 
     console.log(
         chalk.grey(
-            `\nExtending deposit of additional amount: \
-             ${formatEther(<bigint>args[2])}  GLM, \
-             flatFeeAmount: ${formatEther(<bigint>args[3])}  GLM, for ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
+            `\nExtending deposit of additional amount: ${formatEther(<bigint>args[2])}  GLM, flatFeeAmount: ${formatEther(<bigint>args[3])}  GLM, for ${((validToTimestamp - new Date().getTime()) / 60 / 60 / 1000).toFixed(2)} hours.`,
         ),
     );
     console.log(chalk.grey(`Using contract at address: ${LOCK_CONTRACT.address}.`));
@@ -187,7 +184,7 @@ async function getDepositDetails() {
         id: deposit.id.toString(),
     };
     return depositData;
-};
+}
 
 const clearAllowance = async () => {
     const args = [LOCK_CONTRACT.address, BigInt(0)];
