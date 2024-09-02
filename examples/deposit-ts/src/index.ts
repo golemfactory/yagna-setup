@@ -1,4 +1,4 @@
-import { Address, createPublicClient, decodeFunctionData, Hex, http, parseAbi, WatchEventReturnType } from "viem";
+import { Address, createPublicClient, decodeFunctionData, Hex, http, WatchEventReturnType } from "viem";
 import chalk from "chalk";
 import { holesky } from "viem/chains";
 
@@ -33,7 +33,7 @@ function observeTransactionEvents(context: ObserveTransactionsContext): Promise<
     return new Promise((resolve) => {
         context.unwatch = publicClient.watchEvent({
             onLogs: async (logs) => {
-                const transactions = {}
+                const transactions = {};
 
                 for (const log of logs) {
                     if (!(log.transactionHash in transactions)) {
@@ -59,14 +59,16 @@ function observeTransactionEvents(context: ObserveTransactionsContext): Promise<
                         console.log(chalk.magenta("from:"), transaction.from);
                         console.log(chalk.magenta("hash:"), transaction.hash, "\n");
 
-                        if (// if deposit is closed by our requestor, stop observing
+                        if (
+                            // if deposit is closed by our requestor, stop observing
                             parsedMethod.functionName.toLowerCase().includes("close") &&
                             transaction.from == context.observedAddress
                         ) {
                             isResolved = true;
                         }
 
-                        if (// if deposit is terminated by our requestor, stop observing
+                        if (
+                            // if deposit is terminated by our requestor, stop observing
                             parsedMethod.functionName == "terminateDeposit" &&
                             transaction.from == config.funder.address
                         ) {
