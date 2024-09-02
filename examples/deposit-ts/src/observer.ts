@@ -22,7 +22,7 @@ interface LogType {
     eventName: string;
 }
 
-async function processLogs(context: ObserveTransactionsContext, resolve: { (): void }, logs: [LogType]) {
+async function processLogs(observedAddress: Address, logs: [LogType]) {
     const transactions = {};
 
     for (const log of logs) {
@@ -52,7 +52,7 @@ async function processLogs(context: ObserveTransactionsContext, resolve: { (): v
             if (
                 // if deposit is closed by our requestor, stop observing
                 parsedMethod.functionName.toLowerCase().includes("close") &&
-                transaction.from == context.observedAddress
+                transaction.from == observedAddress
             ) {
                 isResolved = true;
             }
@@ -66,17 +66,18 @@ async function processLogs(context: ObserveTransactionsContext, resolve: { (): v
             }
         }
     }
-    if (isResolved) {
-        context.unwatch();
-        resolve();
-    }
+    return isResolved;
 }
 
 export function observeTransactionEvents(context: ObserveTransactionsContext): Promise<void> {
     return new Promise((resolve) => {
         context.unwatch = publicClient.watchEvent({
             onLogs: async (logs) => {
-                await processLogs(context, resolve, <[LogType]>(<unknown>logs));
+                const isResolved = await processLogs(context.observedAddress, <[LogType]>(<unknown>logs));
+                if (isResolved) {
+                    context.unwatch();
+                    resolve();
+                }
             },
             events: parseAbi([
                 "event DepositCreated(uint256 indexed id, address spender)",
