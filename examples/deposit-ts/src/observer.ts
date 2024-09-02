@@ -17,57 +17,66 @@ const publicClient = createPublicClient({
     transport: http(config.rpcUrl),
 });
 
+interface LogType {
+    transactionHash: Hex;
+    eventName: string;
+}
+
+async function processLogs(context: ObserveTransactionsContext, resolve: { (): void }, logs: [LogType]) {
+    const transactions = {};
+
+    for (const log of logs) {
+        if (!(log.transactionHash in transactions)) {
+            transactions[log.transactionHash] = [];
+        }
+        transactions[log.transactionHash].push(log);
+    }
+    let isResolved = false;
+    for (const txHash in transactions) {
+        const transaction = await publicClient.getTransaction({ hash: <Hex>txHash });
+
+        const parsedMethod = decodeFunctionData({
+            abi: abiLock,
+            data: transaction.input,
+        });
+
+        const logs = transactions[txHash];
+
+        for (const log of logs) {
+            const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
+            console.log(chalk.magenta("\ncall:", functionNamePlusArgs));
+            console.log(chalk.magenta("event:"), log.eventName);
+            console.log(chalk.magenta("from:"), transaction.from);
+            console.log(chalk.magenta("hash:"), transaction.hash, "\n");
+
+            if (
+                // if deposit is closed by our requestor, stop observing
+                parsedMethod.functionName.toLowerCase().includes("close") &&
+                transaction.from == context.observedAddress
+            ) {
+                isResolved = true;
+            }
+
+            if (
+                // if deposit is terminated by our requestor, stop observing
+                parsedMethod.functionName == "terminateDeposit" &&
+                transaction.from == config.funder.address
+            ) {
+                isResolved = true;
+            }
+        }
+    }
+    if (isResolved) {
+        context.unwatch();
+        resolve();
+    }
+}
+
 export function observeTransactionEvents(context: ObserveTransactionsContext): Promise<void> {
     return new Promise((resolve) => {
         context.unwatch = publicClient.watchEvent({
             onLogs: async (logs) => {
-                const transactions = {};
-
-                for (const log of logs) {
-                    if (!(log.transactionHash in transactions)) {
-                        transactions[log.transactionHash] = [];
-                    }
-                    transactions[log.transactionHash].push(log);
-                }
-                let isResolved = false;
-                for (const txHash in transactions) {
-                    const transaction = await publicClient.getTransaction({ hash: <Hex>txHash });
-
-                    const parsedMethod = decodeFunctionData({
-                        abi: abiLock,
-                        data: transaction.input,
-                    });
-
-                    const logs = transactions[txHash];
-
-                    for (const log of logs) {
-                        const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
-                        console.log(chalk.magenta("\ncall:", functionNamePlusArgs));
-                        console.log(chalk.magenta("event:"), log.eventName);
-                        console.log(chalk.magenta("from:"), transaction.from);
-                        console.log(chalk.magenta("hash:"), transaction.hash, "\n");
-
-                        if (
-                            // if deposit is closed by our requestor, stop observing
-                            parsedMethod.functionName.toLowerCase().includes("close") &&
-                            transaction.from == context.observedAddress
-                        ) {
-                            isResolved = true;
-                        }
-
-                        if (
-                            // if deposit is terminated by our requestor, stop observing
-                            parsedMethod.functionName == "terminateDeposit" &&
-                            transaction.from == config.funder.address
-                        ) {
-                            isResolved = true;
-                        }
-                    }
-                }
-                if (isResolved) {
-                    context.unwatch();
-                    resolve();
-                }
+                await processLogs(context, resolve, <[LogType]>(<unknown>logs));
             },
             events: parseAbi([
                 "event DepositCreated(uint256 indexed id, address spender)",
