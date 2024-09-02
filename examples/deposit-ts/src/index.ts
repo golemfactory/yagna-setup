@@ -29,54 +29,58 @@ const LOCK_CONTRACT = getContract({
 })
 */
 
-async function observeTransactionEvents(context: ObserveTransactionsContext) {
-    context.unwatch = publicClient.watchEvent({
-        onLogs: async (logs) => {
-            for (const log of logs) {
-                const txHash = log.transactionHash;
-                const transaction = await publicClient.getTransaction({ hash: txHash });
+function observeTransactionEvents(context: ObserveTransactionsContext): Promise<void> {
+    return new Promise((resolve) => {
+        context.unwatch = publicClient.watchEvent({
+            onLogs: async (logs) => {
+                for (const log of logs) {
+                    const txHash = log.transactionHash;
+                    const transaction = await publicClient.getTransaction({ hash: txHash });
 
-                const parsedMethod = decodeFunctionData({
-                    abi: abiLock,
-                    data: transaction.input,
-                });
+                    const parsedMethod = decodeFunctionData({
+                        abi: abiLock,
+                        data: transaction.input,
+                    });
 
-                const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
-                console.log(chalk.magenta("\ncall:", functionNamePlusArgs));
-                console.log(chalk.magenta("event:"), log.eventName);
-                console.log(chalk.magenta("from:"), transaction.from);
-                console.log(chalk.magenta("hash:"), transaction.hash, "\n");
+                    const functionNamePlusArgs = `${parsedMethod.functionName}(${parsedMethod.args.join(", ")})`;
+                    console.log(chalk.magenta("\ncall:", functionNamePlusArgs));
+                    console.log(chalk.magenta("event:"), log.eventName);
+                    console.log(chalk.magenta("from:"), transaction.from);
+                    console.log(chalk.magenta("hash:"), transaction.hash, "\n");
 
-                if (
-                    // if deposit is closed by our requestor, stop observing
-                    parsedMethod.functionName.toLowerCase().includes("close") &&
-                    transaction.from == context.observedAddress
-                ) {
-                    console.log(chalk.magenta("Stop observing events\n"));
-                    context.unwatch();
+                    if (
+                        // if deposit is closed by our requestor, stop observing
+                        parsedMethod.functionName.toLowerCase().includes("close") &&
+                        transaction.from == context.observedAddress
+                    ) {
+                        console.log(chalk.magenta("Stop observing events\n"));
+                        context.unwatch();
+                        resolve();
+                    }
+
+                    if (
+                        // if deposit is terminated by our requestor, stop observing
+                        parsedMethod.functionName == "terminateDeposit" &&
+                        transaction.from == config.funder.address
+                    ) {
+                        context.unwatch();
+                        resolve();
+                    }
                 }
+            },
+            //event: parseAbi("event DepositClosed(uint256 indexed id, address spender)"),
 
-                if (
-                    // if deposit is terminated by our requestor, stop observing
-                    parsedMethod.functionName == "terminateDeposit" &&
-                    transaction.from == config.funder.address
-                ) {
-                    context.unwatch();
-                }
-            }
-        },
-        //event: parseAbi("event DepositClosed(uint256 indexed id, address spender)"),
+            events: parseAbi([
+                "event DepositCreated(uint256 indexed id, address spender)",
+                "event DepositClosed(uint256 indexed id, address spender)",
+                "event DepositExtended(uint256 indexed id, address spender)",
+                "event DepositFeeTransfer(uint256 indexed id, address spender, uint128 amount)",
+                "event DepositTerminated(uint256 indexed id, address spender)",
+                "event DepositTransfer(uint256 indexed id, address spender, address recipient,uint128 amount)",
+            ]),
 
-        events: parseAbi([
-            "event DepositCreated(uint256 indexed id, address spender)",
-            "event DepositClosed(uint256 indexed id, address spender)",
-            "event DepositExtended(uint256 indexed id, address spender)",
-            "event DepositFeeTransfer(uint256 indexed id, address spender, uint128 amount)",
-            "event DepositTerminated(uint256 indexed id, address spender)",
-            "event DepositTransfer(uint256 indexed id, address spender, address recipient,uint128 amount)",
-        ]),
-
-        address: <Hex>config.lockPaymentContract.holeskyAddress,
+            address: <Hex>config.lockPaymentContract.holeskyAddress,
+        });
     });
 }
 
@@ -207,5 +211,8 @@ await runUserActions();
 /* step 3 - run operator actions (actions performed by the spender) */
 await runOperator(obs.context);
 
+console.log(chalk.magenta("All actions completed - waiting until observer stops"));
 /* step 4 - wait for observer to finish listening for deposit close, which ends example */
 await obs.observerFuture;
+
+console.log(chalk.magenta("Observer stopped - example finished"));
