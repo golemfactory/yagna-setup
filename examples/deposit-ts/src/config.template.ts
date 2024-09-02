@@ -13,11 +13,9 @@ const config = {
     rpcUrl: "https://holesky.rpc-node.dev.golem.network",
     lockPaymentContract: {
         holeskyAddress: "0x63704675f72A47a7a183112700Cb48d4B0A94332",
-        abiPath: "./abiLOCK.json",
     },
     glmContract: {
         holeskyAddress: "0x8888888815bf4DB87e57B609A50f938311EEd068",
-        abiPath: "./abiGLM.json",
     },
     budget: {
         amount: 1.0,
