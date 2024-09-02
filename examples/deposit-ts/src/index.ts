@@ -1,4 +1,4 @@
-import { Address, createPublicClient, decodeFunctionData, Hex, http, WatchEventReturnType } from "viem";
+import { Address, createPublicClient, decodeFunctionData, Hex, http, parseAbi, WatchEventReturnType } from "viem";
 import chalk from "chalk";
 import { holesky } from "viem/chains";
 
@@ -81,7 +81,14 @@ function observeTransactionEvents(context: ObserveTransactionsContext): Promise<
                     resolve();
                 }
             },
-
+            events: parseAbi([
+                "event DepositCreated(uint256 indexed id, address spender)",
+                "event DepositClosed(uint256 indexed id, address spender)",
+                "event DepositExtended(uint256 indexed id, address spender)",
+                "event DepositFeeTransfer(uint256 indexed id, address spender, uint128 amount)",
+                "event DepositTerminated(uint256 indexed id, address spender)",
+                "event DepositTransfer(uint256 indexed id, address spender, address recipient, uint128 amount)",
+            ]),
             address: <Hex>config.lockPaymentContract.holeskyAddress,
         });
     });

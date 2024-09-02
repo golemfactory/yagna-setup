@@ -213,5 +213,6 @@ export const runUserActions = async () => {
     await createDeposit();
     await extendDeposit();
     await getDepositID();
+    await getDepositDetails();
     await clearAllowance();
 };
