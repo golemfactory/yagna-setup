@@ -7,6 +7,7 @@ import { holesky } from "viem/chains";
 export interface ObserveTransactionsContext {
     observedAddress: Address;
     spenderAddress: Address | null;
+    funderAddress: Address;
     unwatch: WatchEventReturnType;
 }
 
@@ -22,7 +23,7 @@ interface LogType {
     eventName: string;
 }
 
-async function processLogs(observedAddress: Address, logs: [LogType]) {
+async function processLogs(spenderAddress: Address, funderAddress: Address, logs: [LogType]) {
     const transactions = {};
 
     for (const log of logs) {
@@ -52,7 +53,7 @@ async function processLogs(observedAddress: Address, logs: [LogType]) {
             if (
                 // if deposit is closed by our requestor, stop observing
                 parsedMethod.functionName.toLowerCase().includes("close") &&
-                transaction.from == observedAddress
+                transaction.from == spenderAddress
             ) {
                 isResolved = true;
             }
@@ -60,7 +61,7 @@ async function processLogs(observedAddress: Address, logs: [LogType]) {
             if (
                 // if deposit is terminated by our requestor, stop observing
                 parsedMethod.functionName == "terminateDeposit" &&
-                transaction.from == config.funder.address
+                transaction.from == funderAddress
             ) {
                 isResolved = true;
             }
@@ -73,7 +74,11 @@ export function observeTransactionEvents(context: ObserveTransactionsContext): P
     return new Promise((resolve) => {
         context.unwatch = publicClient.watchEvent({
             onLogs: async (logs) => {
-                const isResolved = await processLogs(context.observedAddress, <[LogType]>(<unknown>logs));
+                const isResolved = await processLogs(
+                    context.spenderAddress,
+                    context.funderAddress,
+                    <[LogType]>(<unknown>logs),
+                );
                 if (isResolved) {
                     context.unwatch();
                     resolve();
@@ -87,7 +92,7 @@ export function observeTransactionEvents(context: ObserveTransactionsContext): P
                 "event DepositTerminated(uint256 indexed id, address spender)",
                 "event DepositTransfer(uint256 indexed id, address spender, address recipient, uint128 amount)",
             ]),
-            address: <Hex>config.lockPaymentContract.holeskyAddress,
+            address: context.observedAddress,
         });
     });
 }
@@ -95,6 +100,7 @@ export function observeTransactionEvents(context: ObserveTransactionsContext): P
 export async function spawnContractObserver() {
     const context = {
         observedAddress: <Address>config.lockPaymentContract.holeskyAddress,
+        funderAddress: <Address>config.funder.address,
         spenderAddress: null,
         unwatch: () => {
             throw new Error("Cannot call unwatch before watch");

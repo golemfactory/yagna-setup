@@ -1,9 +1,0 @@
-{
-    "files": ["*.ts", "*.json"],
-    "compilerOptions": {
-        "module": "commonjs",
-        "resolveJsonModule": true,
-        "esModuleInterop": true,
-        "allowImportingTsExtensions": true,
-    },
-}

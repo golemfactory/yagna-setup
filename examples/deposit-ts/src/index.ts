@@ -47,7 +47,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
             // paymentPlatform: 'erc20-holesky-tglm'
         });
 
-        observerContext.observedAddress = <Address>allocation.address;
+        observerContext.spenderAddress = <Address>allocation.address;
 
         const order1 = {
             demand: {
@@ -78,7 +78,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
                 },
             },
             payment: {
-                allocation: allocation.id, // alternative is to pass allocation ID
+                allocation: allocation.id, // alternative way to pass allocation ID
             },
         };
 
@@ -89,7 +89,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
             .getExeUnit()
             .then((exe) => exe.run(`echo Task 1 running on ${exe.provider.id}`))
             .then((res) => console.log(chalk.inverse("\n", res.stdout)));
-        // do some more work
+
         await rental1.stopAndFinalize();
         //@ts-expect-error - some weird type check to resolve
         const rental2 = await glm.oneOf({ order: order2 });
