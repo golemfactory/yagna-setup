@@ -20,7 +20,7 @@ const LOCK_CONTRACT = getContract({
 async function runOperator(observerContext: ObserveTransactionsContext) {
     const depositData = await readJsonFile("./depositData.json");
 
-    // do the test
+    // run the computations on the Golem Network
     const glm = new GolemNetwork({
         logger: pinoPrettyLogger({
             level: "info",

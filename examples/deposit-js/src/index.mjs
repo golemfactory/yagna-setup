@@ -8,14 +8,6 @@ import { readFileSync } from "fs";
 
 import config from "./config.js";
 
-/*
- context = {
-    observedAddress: Address, 
-    spenderAddress: Address | null; 
-    unwatch: WatchEventReturnType;
-}
-*/
-
 async function runOperator(observerContext) {
     const depositData = await JSON.parse(readFileSync("./depositData.json", "utf-8"));
 

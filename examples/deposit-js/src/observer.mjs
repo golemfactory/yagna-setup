@@ -11,9 +11,7 @@ const publicClient = createPublicClient({
     transport: http(config.rpcUrl),
 });
 
-const context = { unwatch: () => {} };
-
-async function processLogs(spenderAddress, logs) {
+async function processLogs(spenderAddress, funderAddress, logs) {
     const transactions = {};
 
     for (const log of logs) {
@@ -51,7 +49,7 @@ async function processLogs(spenderAddress, logs) {
             if (
                 // if deposit is terminated by our requestor, stop observing
                 parsedMethod.functionName == "terminateDeposit" &&
-                transaction.from == config.funder.address
+                transaction.from == funderAddress
             ) {
                 isResolved = true;
             }
@@ -64,7 +62,7 @@ export function observeTransactionEvents(context) {
     return new Promise((resolve) => {
         context.unwatch = publicClient.watchEvent({
             onLogs: async (logs) => {
-                const isResolved = await processLogs(context.spenderAddress, logs);
+                const isResolved = await processLogs(context.spenderAddress, context.funderAddress, logs);
 
                 if (isResolved) {
                     context.unwatch();
@@ -79,7 +77,7 @@ export function observeTransactionEvents(context) {
                 "event DepositTerminated(uint256 indexed id, address spender)",
                 "event DepositTransfer(uint256 indexed id, address spender, address recipient, uint128 amount)",
             ]),
-            address: config.lockPaymentContract.holeskyAddress,
+            address: context.observedAddress,
         });
     });
 }
@@ -87,6 +85,7 @@ export function observeTransactionEvents(context) {
 export async function spawnContractObserver() {
     const context = {
         observedAddress: config.lockPaymentContract.holeskyAddress,
+        funderAddress: config.funder.address,
         spenderAddress: null,
         unwatch: () => {
             throw new Error("Cannot call unwatch before watch");
