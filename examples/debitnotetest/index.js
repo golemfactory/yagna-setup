@@ -54,46 +54,52 @@ function getTimeStamp() {
 const myProposalFilter = (proposal) =>
   Boolean(proposal.provider.name.indexOf("testnet") === -1);
 
-const subnetTag = process.env.YAGNA_SUBNET || "public";
+const subnetTag = process.env.YAGNA_SUBNET || "change_me";
 const appKey = process.env.YAGNA_APPKEY || "66iiOdkvV29";
 
 const debitNoteTimeout = parseInt(process.env.DEBIT_NOTE_TIMEOUT || "10");
 const debitNoteInterval = parseInt(process.env.DEBIT_NOTE_INTERVAL || "15");
-const order = {
-  demand: {
-    workload: { imageTag: "golem/alpine:latest" },
-    payment: {
-      debitNotesAcceptanceTimeoutSec: debitNoteTimeout,
-      midAgreementDebitNoteIntervalSec: debitNoteInterval,
-      midAgreementPaymentTimeoutSec: 1200,
-    },
-    subnetTag: subnetTag,
-  },
-  market: {
-    rentHours: 13,
-    pricing: {
-      model: "linear",
-      maxStartPrice: 0.5,
-      maxCpuPerHourPrice: 1.0,
-      maxEnvPerHourPrice: 0.5,
-    },
-    offerProposalFilter: myProposalFilter,
-  },
-  activity: {
-    activityExeBatchResultPollIntervalSeconds: 10,
-    activityExeBatchResultMaxRetries: 20,
-  },
-};
 
 async function connectAndRun(glm) {
-  await glm.connect();
-  history.push({
-    time: new Date(),
-    info: "glmConnected",
-    extra: `Connected to yagna with app key ${appKey} and subnet tag ${subnetTag}`,
-  });
+    await glm.connect();
 
-  glm.market.events.on("agreementApproved", (event) => {
+    const allocation = await glm.payment.createAllocation( {
+        budget: 80.0,
+        paymentPlatform: "erc20-holesky-tglm",
+        expirationSec: 3600
+    });
+
+
+    const order = {
+        demand: {
+            workload: {imageTag: "golem/alpine:latest"},
+            payment: {
+                debitNotesAcceptanceTimeoutSec: debitNoteTimeout,
+                midAgreementDebitNoteIntervalSec: debitNoteInterval,
+                midAgreementPaymentTimeoutSec: 1200,
+            },
+            subnetTag: subnetTag,
+        },
+        market: {
+            rentHours: 0.1,
+            pricing: {
+                model: "linear",
+                maxStartPrice: 0.5,
+                maxCpuPerHourPrice: 3000.0,
+                maxEnvPerHourPrice: 3000.0,
+            },
+            offerProposalFilter: myProposalFilter,
+        },
+        payment: {
+            allocation: allocation,
+        },
+        activity: {
+            activityExeBatchResultPollIntervalSeconds: 10,
+            activityExeBatchResultMaxRetries: 20,
+        },
+    };
+
+
     history.push({
       time: new Date(),
       info: "agreementApproved",
