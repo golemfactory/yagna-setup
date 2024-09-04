@@ -19,7 +19,7 @@ Setting the test environment
 1. Preparation:
 Clone this repo. Scripts were tested on Ubuntu.
 ```
-git clone scx1332/yagna-setup.git
+git clone https://github.com/golemfactory/yagna-setup.git
 ```
 
 sudo adduser $USER kvm
@@ -43,6 +43,8 @@ sudo apt-get install gperf
 sudo apt autoremove
 
 3. Cloning of repos
+
+cd yagna setup
 
 Run the `prepare.sh` script.
 
@@ -93,6 +95,17 @@ The environment will use a central router (by default - which can be changed).
 Note: If you installed Yagna on this system using a standard installer before, you have the following components installed and in your PATH:
 gftp, yagna, ya-provider, golemsp. 
 
+Note: *
+You should remove whole standard yagna isntallation component:
+
+rm ~/.local/bin/yagna
+rm ~/.local/bin/golemsp
+rm ~/.local/bin/ya-provider
+rm -rf ~/.local/share/yagna
+rm -rf ~/.local/share/ya-installer
+rm -rf ~/.local/share/ya-provider
+rm -rf ~/.local/lib/yagna
+
 By default, they are "installed" in /usr/bin. (They are in the ya-installer directory, in /usr/bin there are links).
 Please remove them or change the order in the PATH variable so the ./binaries folder is before /usr/bin.
 
@@ -140,7 +153,7 @@ Run:
 
 Note: for older yagna, before running ya-provider you need to initialize the payment driver:
 
-yagna init --as-receiver --network holesky
+yagna payment init --receiver --network holesky
 
 Run:
 ya-provider run
@@ -151,6 +164,10 @@ ya-provider run
 
 Starting the requestor:
 cd to requestor's folder:
+
+and run yagna on requestor's node:
+
+yagna service run
 
 Note: while we can run yagna commands as a requestor from any location (./binaries folder is in the PATH), however when you start it, you want to run with full config, so you need to start it in the requestor's folder.
 
@@ -163,8 +180,11 @@ Install node (hint nvm will let you switch node version: nvm install --lts)
 CD to the example folder
 install libraries:
 npm install
-`node index.mjs` 
-to run the examples
+
+and run the example:
+
+node index.js 
+
 
 7. Other
 
