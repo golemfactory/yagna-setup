@@ -115,6 +115,13 @@ if __name__ == "__main__":
         help="The mode in which to run the program. Choices are 'central' or 'hybrid'. Default is 'central'."
     )
 
+    # Add the mode argument
+    parser.add_argument(
+        '--payments',
+        choices=['full', 'skip'],
+        default='skip',
+    )
+
     # Add the no-providers argument
     parser.add_argument(
         '--num-providers',

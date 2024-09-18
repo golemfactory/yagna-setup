@@ -1,0 +1,31 @@
+name: Test with assets
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      empty:
+        description: 'Empty option'
+        required: true
+        default: 'Not used'
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: 0
+
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare funding
+        run: |
+          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
+          tar -xf erc20_processor-linux-x86_64.tar.xz
+          sudo cp erc20_processor /usr/bin/erc20_processor
+          erc20_processor --version
+
