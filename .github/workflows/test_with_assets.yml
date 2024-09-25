@@ -25,6 +25,12 @@ jobs:
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
 
+      - name: Generate ethereum accounts
+        run: |
+          erc20_processor generate-key -n 5 > private_keys.env
+          cat private_keys.env | grep ETH_ADDRESS | sed "s/#\s//g" | sed "s/:\s/=/g" > $GITHUB_ENV
+          cat private_keys.env | grep ETH_PRIVATE_KEY | sed "s/#\s//g" | sed "s/:\s/=/g" > $GITHUB_ENV
+
       - name: Download and install binaries
         run: |
           /bin/bash download_binaries.sh
@@ -45,6 +51,7 @@ jobs:
           cat .env
           yagna service run&
           sleep 4
+          yagna id create --password= --from-private-key=$ETH_PRIVATE_KEY_0
           env > yagnadir/env.log
 
       - name: Run provider
