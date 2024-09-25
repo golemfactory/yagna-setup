@@ -6,6 +6,31 @@ on:
     branches: [ "main" ]
 
 jobs:
+  prepare_funded_account:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install erc20_processor
+        run: |
+          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
+          tar -xf erc20_processor-linux-x86_64.tar.xz
+          sudo cp erc20_processor /usr/bin/erc20_processor
+          erc20_processor --version
+
+      - name: Print ref and commit sha
+        run: |
+          echo ${GITHUB_REF}${$GITHUB_SHA}
+
+      - name: Fund first account
+        run: |
+          mkdir funding && cd funding
+          echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
+          erc20_processor balance
+          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token glm --amount 100
+          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token eth --amount 0.001
+          erc20_processor run
+
   test:
     strategy:
       fail-fast: false
@@ -18,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare funding
+      - name: Install erc20_processor
         run: |
           wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
           tar -xf erc20_processor-linux-x86_64.tar.xz
