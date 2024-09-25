@@ -6,40 +6,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  prepare_funded_account:
+  fund_accounts:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install erc20_processor
-        run: |
-          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
-          tar -xf erc20_processor-linux-x86_64.tar.xz
-          sudo cp erc20_processor /usr/bin/erc20_processor
-          erc20_processor --version
-
-      - name: Print ref and commit sha
-        run: |
-          echo "ehodqiyvla_${{ github.ref }}${{ github.sha }}"
-
-      - name: Fund first account
-        run: |
-          mkdir funding && cd funding
-          echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
-          erc20_processor balance
-          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token glm --amount 100
-          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token eth --amount 0.001
-          erc20_processor run
-
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: 0
-
-    timeout-minutes: 20
-    runs-on: ubuntu-latest
+    outputs:
+      eth_private_key_0: ${{ steps.gen-key.outputs.ETH_PRIVATE_KEY_0 }}
+      eth_address_0: ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,22 +22,42 @@ jobs:
           erc20_processor --version
 
       - name: Generate ethereum accounts
+        id: gen-key
         run: |
-          mkdir create-accounts && cd create-accounts
+          mkdir funding && cd funding
           erc20_processor generate-key -n 5 > .env
           
-          cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
-          cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
+          cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_OUTPUT
+          cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_OUTPUT
 
       - name: Fund first account
         run: |
           mkdir funding && cd funding
           echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
           erc20_processor balance
-          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token glm --amount 100
-          erc20_processor transfer --recipient $ETH_ADDRESS_0 --token eth --amount 0.001
+          erc20_processor transfer --recipient {{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token glm --amount 100
+          erc20_processor transfer --recipient {{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token eth --amount 0.001
           erc20_processor run
-      
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: 0
+
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    needs: [fund_accounts]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install erc20_processor
+        run: |
+          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
+          tar -xf erc20_processor-linux-x86_64.tar.xz
+          sudo cp erc20_processor /usr/bin/erc20_processor
+          erc20_processor --version
 
       - name: Download and install binaries
         run: |
@@ -88,8 +79,8 @@ jobs:
           cat .env
           yagna service run&
           sleep 4
-          yagna id create --password= --from-private-key=$ETH_PRIVATE_KEY_0
-          yagna app-key create --id $ETH_ADDRESS_0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+          yagna id create --password= --from-private-key=${{ needs.fund_accounts.outputs.eth_private_key_0 }}
+          yagna app-key create --id ${{ needs.fund_accounts.outputs.eth_address_0 }} dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
 
       - name: Run provider
         run: |
