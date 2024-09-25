@@ -55,8 +55,8 @@ function getTimeStamp() {
 const myProposalFilter = (proposal) =>
     Boolean(proposal.provider.name.indexOf("testnet") === -1);
 
-const subnetTag = process.env.YAGNA_SUBNET || "change_me";
-const appKey = process.env.YAGNA_APPKEY || "66iiOdkvV29";
+const subnetTag = process.env.YAGNA_SUBNET || "public";
+const appKey = process.env.YAGNA_REQUESTOR_APPKEY || "66iiOdkvV29";
 
 const debitNoteTimeout = parseInt(process.env.DEBIT_NOTE_TIMEOUT || "10");
 const debitNoteInterval = parseInt(process.env.DEBIT_NOTE_INTERVAL || "15");
