@@ -35,8 +35,8 @@ jobs:
           mkdir funding && cd funding
           echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
           erc20_processor balance
-          erc20_processor transfer --recipient {{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token glm --amount 100
-          erc20_processor transfer --recipient {{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token eth --amount 0.001
+          erc20_processor transfer --recipient ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token glm --amount 100
+          erc20_processor transfer --recipient ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token eth --amount 0.001
           erc20_processor run
 
   test:
