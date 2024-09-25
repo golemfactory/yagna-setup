@@ -57,6 +57,8 @@ const myProposalFilter = (proposal) =>
 
 const subnetTag = process.env.YAGNA_SUBNET || "public";
 const appKey = process.env.YAGNA_REQUESTOR_APPKEY || "66iiOdkvV29";
+console.log("Using subnet tag:", subnetTag);
+console.log("Using app key:", appKey);
 
 const debitNoteTimeout = parseInt(process.env.DEBIT_NOTE_TIMEOUT || "10");
 const debitNoteInterval = parseInt(process.env.DEBIT_NOTE_INTERVAL || "15");
