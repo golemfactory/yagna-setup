@@ -49,8 +49,8 @@ def gen_provider_env(provider_no):
     s += f"SUBNET={SUBNET}\n\n"
 
     s += f"# Rest API key\n"
-    # s += f"YAGNA_AUTOCONF_APPKEY={PROVIDER_APP_KEY}\n"
-    # s += f"YAGNA_APPKEY={PROVIDER_APP_KEY}\n\n"
+    s += f"YAGNA_AUTOCONF_APPKEY={PROVIDER_APP_KEY}\n"
+    s += f"YAGNA_APPKEY={PROVIDER_APP_KEY}\n\n"
 
     s += f"# NET settings\n"
     if YA_NET_TYPE == "central":
