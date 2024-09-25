@@ -21,10 +21,19 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Check how many accounts are provisioned
+        id: check_count # Create an ID for the step so we can refer to its output
         run: |
-          echo "Number of provisioned accounts: ${curl https://polygongas.org/keys/count}"
+          COUNT=$(curl https://polygongas.org/keys/count)
+          echo "Provisioned accounts count: $COUNT"
+          if [ "$COUNT" -gt 5 ]; then
+            echo "Too many accounts provisioned ($COUNT). Skipping remaining steps."
+            echo "should_continue=false" >> $GITHUB_ENV
+          else
+            echo "should_continue=true" >> $GITHUB_ENV
+          fi
 
       - name: Prepare funding
+        if: env.should_continue == 'true'
         run: |
           wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
           tar -xf erc20_processor-linux-x86_64.tar.xz
@@ -32,6 +41,7 @@ jobs:
           erc20_processor --version
 
       - name: Generate ethereum accounts
+        if: env.should_continue == 'true'
         run: |
           mkdir funding && cd funding
           erc20_processor generate-key -n 1 > .env
@@ -46,5 +56,6 @@ jobs:
           cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
 
       - name: Upload account
+        if: env.should_continue == 'true'
         run: |
           curl -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY_0 https://polygongas.org/keys/add
