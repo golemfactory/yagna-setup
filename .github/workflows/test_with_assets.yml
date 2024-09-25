@@ -1,13 +1,9 @@
 name: Test with assets
 on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
-    inputs:
-      empty:
-        description: 'Empty option'
-        required: true
-        default: 'Not used'
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -43,12 +39,6 @@ jobs:
         run: |
           python advanced/prepare_runtime.py --mode central --payments full
 
-      - name: Run jsexecutor example
-        run: |
-          cd examples/jsexecutor
-          npm install
-          npm run run
-
       - name: Run requestor
         run: |
           cd golem/requestor
@@ -72,6 +62,12 @@ jobs:
         env:
           YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Run jsexecutor example
+        run: |
+          cd examples/jsexecutor
+          npm install
+          npm run run
 
       - name: Stop requestor
         if: always()
