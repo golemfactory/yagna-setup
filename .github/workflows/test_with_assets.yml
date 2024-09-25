@@ -29,7 +29,7 @@ jobs:
         run: |
           erc20_processor generate-key -n 5 > private_keys.env
           cat private_keys.env | grep ETH_ADDRESS | sed "s/#\s//g" | sed "s/:\s/=/g" > $GITHUB_ENV
-          cat private_keys.env | grep ETH_PRIVATE_KEY | sed "s/#\s//g" | sed "s/:\s/=/g" > $GITHUB_ENV
+          cat private_keys.env | grep ETH_PRIVATE_KEY | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
 
       - name: Download and install binaries
         run: |
