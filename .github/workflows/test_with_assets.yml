@@ -30,8 +30,8 @@ jobs:
           mkdir create-accounts && cd create-accounts
           erc20_processor generate-key -n 5 > .env
           
-          cat .env | grep ETH_ADDRESS | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
-          cat .env | grep ETH_PRIVATE_KEY | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
+          cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
+          cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
 
       - name: Fund first account
         run: |
