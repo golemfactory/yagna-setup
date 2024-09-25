@@ -48,7 +48,7 @@ jobs:
           erc20_processor get-dev-eth
           erc20_processor mint-test-tokens
           erc20_processor run
-          erc20_processor transfer --recipient 0x5550000000000000000000000000000000000555 --token glm amount 900
+          erc20_processor transfer --recipient 0x5550000000000000000000000000000000000555 --token glm --amount 900
           erc20_processor run
           erc20_processor balance
           
