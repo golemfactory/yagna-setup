@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [fund_accounts]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Install erc20_processor
         run: |
