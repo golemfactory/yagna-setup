@@ -29,3 +29,12 @@ jobs:
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
 
+      - name: Download and install binaries
+        run: |
+          /bin/bash download_binaries.sh
+
+      - name: Install binaries
+        run: |
+          sudo mkdir -p /usr/lib/yagna
+          sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
+          sudo mv golem/downloaded/* /usr/bin/ 
