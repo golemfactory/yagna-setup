@@ -89,7 +89,7 @@ def gen_requestor_env():
         port_udp = 11950
         s += f"YA_NET_BIND_URL=udp://0.0.0.0:{port_udp}\n\n"
 
-    s += f"YAGNA_DEV_SKIP_ALLOCATION_VALIDATION=1\n\n"
+    # s += f"YAGNA_DEV_SKIP_ALLOCATION_VALIDATION=1\n\n"
 
     s += ""
     return s
