@@ -4,6 +4,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  cron:
+    - cron: "*/5 * * * *"
 
 jobs:
   test:
@@ -18,6 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check how many accounts are provisioned
+        run: |
+          echo "Number of provisioned accounts: ${curl https://polygongas.org/keys/count}"
+
       - name: Prepare funding
         run: |
           wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
@@ -28,7 +34,7 @@ jobs:
       - name: Generate ethereum accounts
         run: |
           mkdir funding && cd funding
-          erc20_processor generate-key -n 5 > .env
+          erc20_processor generate-key -n 1 > .env
           erc20_processor get-dev-eth
           erc20_processor mint-test-tokens
           erc20_processor run
