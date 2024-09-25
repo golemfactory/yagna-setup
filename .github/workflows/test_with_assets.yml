@@ -100,7 +100,7 @@ jobs:
 
       - name: Run jsexecutor example
         run: |
-          cd examples/jsexecutor
+          cd examples/debitnotetest
           npm install
           npm run run
 
