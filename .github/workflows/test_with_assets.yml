@@ -20,7 +20,7 @@ jobs:
 
       - name: Print ref and commit sha
         run: |
-          echo ${GITHUB_REF}${$GITHUB_SHA}
+          echo "ehodqiyvla_${{ github.ref }}${{ github.sha }}"
 
       - name: Fund first account
         run: |
