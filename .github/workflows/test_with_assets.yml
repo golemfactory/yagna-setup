@@ -36,7 +36,7 @@ jobs:
       - name: Fund first account
         run: |
           mkdir funding && cd funding
-          cat ${secrets.FUNDING_ACCOUNT_01} | sed 's/^/\PRIVATE_KEYS=/' >> > .env
+          cat ${secrets.FUNDING_ACCOUNT_01} | sed 's/^/\PRIVATE_KEYS=/' > .env
           erc20_processor balance
           
 
