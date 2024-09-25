@@ -52,7 +52,7 @@ jobs:
           yagna service run&
           sleep 4
           yagna id create --password= --from-private-key=$ETH_PRIVATE_KEY_0
-          yagna app-key create --id $ETH_ADDRESS_0 dev_req | sed 's/^/\nYAGNA_APPKEY=/' >> .env
+          yagna app-key create --id $ETH_ADDRESS_0 dev_req | sed 's/^/\nYAGNA_APPKEY=/' >> $GITHUB_ENV
 
       - name: Run provider
         run: |
