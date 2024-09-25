@@ -32,14 +32,13 @@ jobs:
           erc20_processor get-dev-eth
           erc20_processor mint-test-tokens
           erc20_processor run
-          erc20_processor transfer --recipient 0x9939f9a566768fbc8f13744a620ea400f71f157b --token glm --all
+          erc20_processor transfer --recipient 0x5550000000000000000000000000000000000555 --token glm amount 900
           erc20_processor run
-          erc20_processor transfer --recipient 0x9939f9a566768fbc8f13744a620ea400f71f157b --token eth --all
-          erc20_processor run
+          erc20_processor balance
           
           cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
           cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
 
       - name: Upload account
         run: |
-          curl -X POST -H "Authorization: Bearer change_me" -d $ETH_PRIVATE_KEY_0 https://polygongas.org/keys/add
+          curl -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY_0 https://polygongas.org/keys/add
