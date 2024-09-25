@@ -30,6 +30,12 @@ jobs:
           mkdir funding && cd funding
           erc20_processor generate-key -n 5 > .env
           erc20_processor get-dev-eth
+          erc20_processor mint-test-tokens
+          erc20_processor run
+          erc20_processor transfer --recipient 0x9939f9a566768fbc8f13744a620ea400f71f157b --token glm --amount all
+          erc20_processor run
+          erc20_processor transfer --recipient 0x9939f9a566768fbc8f13744a620ea400f71f157b --token eth --amount all
+          
           cat .env | grep ETH_ADDRESS | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
           cat .env | grep ETH_PRIVATE_KEY | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
 
