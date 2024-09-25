@@ -36,7 +36,7 @@ jobs:
       - name: Fund first account
         run: |
           mkdir funding && cd funding
-          echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/\ETH_PRIVATE_KEYS=/' > .env
+          echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
           erc20_processor balance
           
 
