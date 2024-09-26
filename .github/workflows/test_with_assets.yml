@@ -113,11 +113,17 @@ jobs:
           npm install --silent
           npm run run
 
+      - name: Wait for payments
+          cd reports
+          npm install --silent
+          node order_items.js --db ../golem/requestor/yagnadir/payment.db
+
       - name: Reports
         run: |
           cd reports
           npm install --silent
           node order_items.js --db ../golem/requestor/yagnadir/payment.db
+          node order_items.js --db ../golem/provider/yagnadir/payment.db
 
       - name: Stop requestor
         if: always()
