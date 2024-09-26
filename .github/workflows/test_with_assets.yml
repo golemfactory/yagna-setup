@@ -34,8 +34,9 @@ jobs:
 
       - name: Download private key
         run: |
-          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
+          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > tee > downloaded_private_key_0.key
           echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
+          
 
       - name: Run requestor
         run: |
