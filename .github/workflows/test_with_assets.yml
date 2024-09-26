@@ -13,9 +13,11 @@ jobs:
         include:
           - restart: true
             one_account: false
+            interval: 1m
 
           - restart: false
             one_account: true
+            interval: 2m
 
 
     timeout-minutes: 20
@@ -71,7 +73,7 @@ jobs:
           sleep 4
           yagna app-key create dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
 
-      - name: Restart yagna
+      - name: Restart requestor if needed
         if: matrix.restart
         run: |
           cd golem/requestor
@@ -79,6 +81,12 @@ jobs:
           sleep 4
           yagna service run&
           sleep 4
+
+      - name: Set payment interval
+        run: |
+          cd golem/requestor
+          yagna payment process set --interval ${{ matrix.interval }}
+          yagna payment process info
 
       - name: Run provider
         run: |
