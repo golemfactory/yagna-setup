@@ -1,14 +1,10 @@
 name: Provision account
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   schedule:
     - cron: "*/5 * * * *"
 
 jobs:
-  test:
+  provision-account:
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +21,7 @@ jobs:
         run: |
           COUNT=$(curl https://polygongas.org/keys/count)
           echo "Provisioned accounts count: $COUNT"
-          if [ "$COUNT" -gt 5 ]; then
+          if [ "$COUNT" -gt 100 ]; then
             echo "Too many accounts provisioned ($COUNT). Skipping remaining steps."
             echo "should_continue=false" >> $GITHUB_ENV
           else
@@ -48,7 +44,7 @@ jobs:
           erc20_processor get-dev-eth
           erc20_processor mint-test-tokens
           erc20_processor run
-          erc20_processor transfer --recipient 0x5550000000000000000000000000000000000555 --token glm amount 900
+          erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token glm --amount 900
           erc20_processor run
           erc20_processor balance
           
