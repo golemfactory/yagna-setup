@@ -113,6 +113,12 @@ jobs:
           npm install
           npm run run
 
+      - name: Reports
+        run: |
+          cd reports
+          npm install
+          node order_items.js --file ../golem/requestor/yagnadir/payments.db
+
       - name: Stop requestor
         if: always()
         run: |
