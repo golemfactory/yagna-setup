@@ -114,6 +114,7 @@ jobs:
           npm run run
 
       - name: Wait for payments
+        run: |
           cd reports
           npm install --silent
           node order_items.js --db ../golem/requestor/yagnadir/payment.db
