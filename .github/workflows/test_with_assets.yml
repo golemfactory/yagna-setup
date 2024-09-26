@@ -37,7 +37,6 @@ jobs:
           ya-sb-router -l tcp://127.0.0.1:5555&
           sleep 1
           echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
-          curl http://127.0.0.1:5555
 
       - name: Download private key
         run: |
