@@ -12,7 +12,10 @@ jobs:
       matrix:
         include:
           - restart: false
+            one_account: false
+
           - restart: true
+            one_account: true
 
 
     timeout-minutes: 20
@@ -48,7 +51,8 @@ jobs:
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
 
-      - name: Run requestor
+      - name: Run requestor second account
+        if: !matrix.one_account
         run: |
           cd golem/requestor
           yagna service run&
@@ -57,8 +61,19 @@ jobs:
           rm ../../downloaded_private_key_0.key
           yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
 
+      - name: Run requestor one account
+        if: matrix.one_account
+        run: |
+          cd golem/requestor
+          echo "YAGNA_AUTOCONF_ID_SECRET=$(cat ../../downloaded_private_key_0.key)" > .env
+          yagna service run&
+          sleep 4
+          yagna id create --password= --from-private-key=$(cat ../../downloaded_private_key_0.key) identity0
+          rm ../../downloaded_private_key_0.key
+          yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+
       - name: Restart yagna
-        if: ${{ matrix.restart }}
+        if: matrix.restart
         run: |
           cd golem/requestor
           yagna service shutdown
