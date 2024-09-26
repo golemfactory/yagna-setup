@@ -38,7 +38,7 @@ jobs:
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
           echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
           # Check if the downloaded key is a valid private key
-          grep -qE '^[a-fA-F0-9]{63}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
+          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
 
       - name: Run requestor
         run: |
