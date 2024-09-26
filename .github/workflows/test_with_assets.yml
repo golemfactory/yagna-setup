@@ -136,7 +136,10 @@ jobs:
         run: |
           # remove image cache from upload
           rm -r golem/provider_0/providerdir/exe-unit/cache
-          tar --zstd -cf data_${{ matrix.id }}.tar.zst golem/requestor/yagnadir golem/provider_0/providerdir golem/provider_0/yagnadir
+          tar --zstd -cf data_${{ matrix.id }}.tar.zst \
+              golem/requestor/yagnadir \
+              golem/provider_0/providerdir \
+              golem/provider_0/yagnadir
 
       - name: Upload logs
         if: always()
