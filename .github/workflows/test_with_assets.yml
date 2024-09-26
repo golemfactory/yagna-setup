@@ -34,9 +34,10 @@ jobs:
 
       - name: Run central-net router
         run: |
-          ya-sb-router -l tcp://0.0.0.0:5555&
+          ya-sb-router -l tcp://127.0.0.1:5555&
           sleep 1
-          echo CENTRAL_NET_HOST=tcp://127.0.0.1:5555 >> $GITHUB_ENV
+          echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
+          curl http://127.0.0.1:5555
 
       - name: Download private key
         run: |
