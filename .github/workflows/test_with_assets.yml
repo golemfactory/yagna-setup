@@ -32,6 +32,11 @@ jobs:
         run: |
           python advanced/prepare_runtime.py --mode central --payments full
 
+      - name: Run router
+        run: |
+          ya-sb-router -l tcp://0.0.0.0:5555&
+          sleep 1
+
       - name: Download private key
         run: |
           set -x
