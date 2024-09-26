@@ -117,7 +117,7 @@ jobs:
         run: |
           cd reports
           npm install
-          node order_items.js --db ../golem/requestor/yagnadir/payments.db
+          node order_items.js --db ../golem/requestor/yagnadir/payment.db
 
       - name: Stop requestor
         if: always()
