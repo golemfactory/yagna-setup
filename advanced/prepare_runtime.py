@@ -12,7 +12,7 @@ TARGET_DIR = os.path.join(PROJECT_ROOT_PATH, "golem")
 YAGNA_API_ALLOW_ORIGIN = "*"
 YA_NET_TYPE = "central"
 YA_NET_RELAY_HOST = ""
-CENTRAL_NET_HOST = "tcp://0.0.0.0:55552"
+CENTRAL_NET_HOST = ""
 
 SUBNET = ""
 
