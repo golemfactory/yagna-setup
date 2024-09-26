@@ -65,7 +65,7 @@ jobs:
           YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
 
-      - name: Run jsexecutor example
+      - name: Run debit note test
         run: |
           cd examples/debitnotetest
           npm install
