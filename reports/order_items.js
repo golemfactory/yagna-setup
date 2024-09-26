@@ -5,13 +5,12 @@ import BigNumber from "bignumber.js";
 const args = process.argv.slice(2); // Skip the first two elements
 
 // Simple command-line argument parsing
-let fileLocation = '';
+let dbLocation = '';
 
 for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-        case '--file':
-        case '-f':
-            fileLocation = args[i + 1];
+        case '--db':
+            dbLocation = args[i + 1];
             i++; // Skip next argument since it's the value of --file
             break;
         default:
@@ -19,14 +18,14 @@ for (let i = 0; i < args.length; i++) {
     }
 }
 
-if (fileLocation) {
-    console.log(`File Location: ${fileLocation}`);
+if (dbLocation) {
+    console.log(`Using DB location: ${dbLocation}`);
 } else {
-    console.log('No file location provided. Use --file or -f to specify.');
+    console.log('No db location provided. Use --file or -f to specify.');
 }
 
 function order_item_documents() {
-    const db = new Database(fileLocation);
+    const db = new Database(dbLocation);
     db.transaction(() => {
         let query = `
             SELECT pboid.order_id,
