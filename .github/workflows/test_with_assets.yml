@@ -49,7 +49,6 @@ jobs:
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
 
       - name: Run requestor
-        if: ${{ matrix.restart }}
         run: |
           cd golem/requestor
           yagna service run&
