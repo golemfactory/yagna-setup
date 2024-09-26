@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download and install binaries
         run: |
@@ -34,8 +34,8 @@ jobs:
 
       - name: Download private key
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
-          echo "Keys left $(curl https://polygongas.org/keys/count)"
+          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
+          echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
 
       - name: Run requestor
         run: |
