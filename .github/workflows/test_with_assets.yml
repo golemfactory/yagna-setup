@@ -60,6 +60,7 @@ jobs:
       - name: Restart yagna
         if: ${{ matrix.restart }}
         run: |
+          cd golem/requestor
           yagna service shutdown
           sleep 4
           yagna service run&
