@@ -69,7 +69,7 @@ jobs:
           rm ../../downloaded_private_key_0.key
           yagna service run&
           sleep 4
-          yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+          yagna app-key create dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
 
       - name: Restart yagna
         if: matrix.restart
