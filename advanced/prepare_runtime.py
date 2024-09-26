@@ -71,7 +71,7 @@ def gen_provider_env(provider_no):
     # used when YA_NET_TYPE=hybrid
     if YA_NET_TYPE == "hybrid":
         port_udp = 11951 + provider_no
-        s += f"YA_NET_BIND_URL=udp://0.0.0.0:{port_udp}"
+        s += f"YA_NET_BIND_URL=udp://0.0.0.0:{port_udp}\n"
 
     return s
 
