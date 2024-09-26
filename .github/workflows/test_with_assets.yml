@@ -63,7 +63,7 @@ jobs:
           yagna id create --password= --from-private-key=$(cat ../../downloaded_private_key_0.key) identity0
           rm ../../downloaded_private_key_0.key
           yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
-          echo $(yagna id show identity0 | grep -oP '(?<=nodeId: )[^\s]+')
+          echo YAGNA_ACCOUNT_0=$(yagna id show identity0 | grep -oP '(?<=nodeId: )[^\s]+') >> $GITHUB_ENV
 
       - name: Run requestor one account
         if: matrix.one_account
@@ -74,7 +74,7 @@ jobs:
           yagna service run&
           sleep 4
           yagna app-key create dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
-          echo $(yagna id show | grep -oP '(?<=nodeId: )[^\s]+')
+          echo YAGNA_ACCOUNT_0=$(yagna id show | grep -oP '(?<=nodeId: )[^\s]+') >> $GITHUB_ENV
 
       - name: Restart requestor if needed
         if: matrix.restart
@@ -88,8 +88,8 @@ jobs:
       - name: Set payment interval
         run: |
           cd golem/requestor
-          yagna payment process set --interval ${{ matrix.interval }}
-          yagna payment process info
+          yagna payment process set --id $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
+          yagna payment process info --id $YAGNA_ACCOUNT_0
 
       - name: Run provider
         run: |
