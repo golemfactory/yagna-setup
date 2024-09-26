@@ -6,40 +6,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  fund_accounts:
-    runs-on: ubuntu-latest
-    outputs:
-      eth_private_key_0: ${{ steps.gen-key.outputs.ETH_PRIVATE_KEY_0 }}
-      eth_address_0: ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install erc20_processor
-        run: |
-          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
-          tar -xf erc20_processor-linux-x86_64.tar.xz
-          sudo cp erc20_processor /usr/bin/erc20_processor
-          erc20_processor --version
-
-      - name: Generate ethereum accounts
-        id: gen-key
-        run: |
-          mkdir funding && cd funding
-          erc20_processor generate-key -n 5 > .env
-          
-          cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_OUTPUT
-          cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_OUTPUT
-
-      - name: Fund first account
-        run: |
-          mkdir funding && cd funding
-          echo ${{ secrets.FUNDING_ACCOUNT_01 }} | sed 's/^/ETH_PRIVATE_KEYS=/' > .env
-          erc20_processor balance
-          erc20_processor transfer --recipient ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token glm --amount 100
-          erc20_processor transfer --recipient ${{ steps.gen-key.outputs.ETH_ADDRESS_0 }} --token eth --amount 0.001
-          erc20_processor run
-
-  test:
+  run_test:
     strategy:
       fail-fast: false
       matrix:
@@ -51,13 +18,6 @@ jobs:
     needs: [fund_accounts]
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install erc20_processor
-        run: |
-          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
-          tar -xf erc20_processor-linux-x86_64.tar.xz
-          sudo cp erc20_processor /usr/bin/erc20_processor
-          erc20_processor --version
 
       - name: Download and install binaries
         run: |
@@ -73,14 +33,18 @@ jobs:
         run: |
           python advanced/prepare_runtime.py --mode central --payments full
 
+      - name: Download private key
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
+
       - name: Run requestor
         run: |
           cd golem/requestor
-          cat .env
           yagna service run&
           sleep 4
-          yagna id create --password= --from-private-key=${{ needs.fund_accounts.outputs.eth_private_key_0 }}
-          yagna app-key create --id ${{ needs.fund_accounts.outputs.eth_address_0 }} dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+          yagna id create --password= --from-private-key=$(cat ../../downloaded_private_key_0.key) identity0
+          rm ../../downloaded_private_key_0.key
+          yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
 
       - name: Run provider
         run: |
