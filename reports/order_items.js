@@ -22,7 +22,44 @@ if (dbLocation) {
     console.log(`Using DB location: ${dbLocation}`);
 } else {
     console.log('No db location provided. Use --db to specify.');
+    dbLocation = 'payment.db'
 }
+
+function payments() {
+    const db = new Database(dbLocation);
+    let is_paid = false;
+    db.transaction(() => {
+        let query = `
+            SELECT pp.timestamp,
+                pp.payee_addr,
+                ppd.payment_id,
+                ppd.owner_id,
+                ppd.peer_id,
+                ppd.agreement_id,
+                ppd.invoice_id,
+                ppd.activity_id,
+                ppd.debit_note_id,
+                ppd.amount
+            FROM pay_payment_document ppd
+            JOIN pay_payment pp ON ppd.owner_id = pp.owner_id AND ppd.peer_id = pp.peer_id AND ppd.payment_id = pp.id
+            ORDER BY pp.timestamp desc
+            `;
+        let rows = db.prepare(query).all();
+        let sumAmount = BigNumber(0);
+        let payment_ids = {}
+        rows.forEach(row => {
+            console.log(row);
+            let amount = BigNumber(row.amount);
+            sumAmount = sumAmount.plus(amount);
+            payment_ids[row.payment_id] = true;
+        });
+        console.log("Summary of payments:");
+        console.log("Number of payment documents: ", rows.length);
+        console.log("Number of physical payments: ", Object.keys(payment_ids).length)
+        console.log("Total payment amount: ", sumAmount.toString());
+    })();
+}
+
 
 function order_item_documents() {
     const db = new Database(dbLocation);
@@ -96,5 +133,5 @@ while (true) {
     }
     //sleep
     await new Promise(r => setTimeout(r, 5000));
-
 }
+payments();
