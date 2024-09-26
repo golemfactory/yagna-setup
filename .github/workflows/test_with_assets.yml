@@ -34,7 +34,7 @@ jobs:
 
       - name: Run router
         run: |
-          ya-sb-router -l tcp://0.0.0.0:55556&
+          ya-sb-router -l tcp://0.0.0.0:55552&
           sleep 1
 
       - name: Download private key
