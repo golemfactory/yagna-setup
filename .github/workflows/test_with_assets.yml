@@ -110,13 +110,13 @@ jobs:
       - name: Run debit note test
         run: |
           cd examples/debitnotetest
-          npm install
+          npm install --silent
           npm run run
 
       - name: Reports
         run: |
           cd reports
-          npm install
+          npm install --silent
           node order_items.js --db ../golem/requestor/yagnadir/payment.db
 
       - name: Stop requestor
