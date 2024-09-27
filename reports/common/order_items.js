@@ -2,8 +2,6 @@ import BigNumber from "bignumber.js";
 import {open_payments_db} from "../common/utils.js";
 
 
-
-
 export function get_order_item_documents() {
     const db = open_payments_db();
     let is_paid = false;
@@ -28,7 +26,7 @@ export function get_order_item_documents() {
                               AND pboid.payee_addr = pboi.payee_addr
                               AND pboid.allocation_id = pboi.allocation_id
                      JOIN pay_batch_order pbo ON pbo.owner_id = pboi.owner_id AND pbo.id = pboi.order_id
-            `;
+        `;
         rows = db.prepare(query).all();
     })();
     return rows;

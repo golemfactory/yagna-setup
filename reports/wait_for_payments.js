@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import {get_order_item_documents} from "./common/order_items.js";
 import {get_activities_and_agreements, sum_of_accepted, sum_of_paid, sum_of_scheduled} from "./common/activities.js";
-import {sumOfPayments} from "./common/payments.js";
+import {get_payments, sumOfPayments} from "./common/payments.js";
 
 
 let loop_no = 0;
