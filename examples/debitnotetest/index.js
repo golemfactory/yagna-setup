@@ -222,7 +222,7 @@ async function connectAndRun(glm) {
     console.log("Started testing provider %s", exe.provider.name);
 
     let stepNo = 0;
-    let numberOfRuns = 10;
+    let numberOfRuns = parseInt(process.env.EXAMPLE_STEPS || "10");
     while (stepNo < numberOfRuns) {
         await exe.run("sleep 30");
         console.log(`Step ${stepNo} finished`);

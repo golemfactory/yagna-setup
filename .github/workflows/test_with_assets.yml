@@ -110,6 +110,7 @@ jobs:
       - name: Run debit note test
         run: |
           cd examples/debitnotetest
+          echo "EXAMPLE_STEPS=2" >> .env
           npm install --silent
           npm run run
 
@@ -118,13 +119,6 @@ jobs:
           cd reports
           npm install --silent
           node order_items.js --db ../golem/requestor/yagnadir/payment.db
-
-      - name: Reports
-        run: |
-          cd reports
-          npm install --silent
-          node order_items.js --db ../golem/requestor/yagnadir/payment.db
-          node order_items.js --db ../golem/provider_0/yagnadir/payment.db
 
       - name: Stop requestor
         if: always()
@@ -137,6 +131,17 @@ jobs:
         run: |
           cd golem/provider_0
           yagna service shutdown
+          sleep 5
+
+      - name: Requestor order items
+        run: |
+          cd reports
+          node order_items.js --db ../golem/requestor/yagnadir/payment.db
+
+      - name: Provider order items
+        run: |
+          cd reports
+          node order_items.js --db ../golem/provider_0/yagnadir/payment.db
 
       - name: Prepare logs
         if: always()
