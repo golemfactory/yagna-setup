@@ -143,6 +143,16 @@ jobs:
           cd reports
           node order_items.js --db ../golem/provider_0/yagnadir/payment.db
 
+      - name: Requestor activities
+        run: |
+          cd reports
+          node activities.js --db ../golem/requestor/yagnadir/payment.db
+
+      - name: Provider activities
+        run: |
+          cd reports
+          node activities.js --db ../golem/provider_0/yagnadir/payment.db
+
       - name: Prepare logs
         if: always()
         run: |
