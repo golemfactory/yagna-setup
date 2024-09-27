@@ -1,39 +1,41 @@
-import { open_payments_db } from './utils.js';
+import {open_payments_db} from './utils.js';
+import BigNumber from "bignumber.js";
 
-function activities() {
+
+export function get_activities_and_agreements() {
     const db = open_payments_db();
+
+    let agreements = {};
+    let activities = {};
     db.transaction(() => {
         let query = `
-            SELECT             
-                pc.id as activity_id,
-                pg.id as agreement_id,
-                pg.owner_id,
-                pg.payment_platform,
-                pg.role,
-                pc.total_amount_due,
-                pc.total_amount_accepted,
-                pc.total_amount_scheduled,
-                pc.total_amount_paid,
-                pc.created_ts,
-                pc.updated_ts,
-                pg.peer_id,
-                pg.payee_addr,
-                pg.payer_addr,
-                pg.total_amount_due as agreement_total_amount_due,
-                pg.total_amount_accepted as agreement_total_amount_accepted,
-                pg.total_amount_scheduled as agreement_total_amount_scheduled,
-                pg.total_amount_paid as agreement_total_amount_paid,
-                pg.app_session_id,
-                pg.created_ts as agreement_created_ts,
-                pg.updated_ts as agreement_updated_ts
-            FROM pay_activity as pc 
-            JOIN pay_agreement as pg
-            ON pc.agreement_id = pg.id and pc.role = pg.role and pc.owner_id = pg.owner_id;
-            `;
+            SELECT pc.id                     as activity_id,
+                   pg.id                     as agreement_id,
+                   pg.owner_id,
+                   pg.payment_platform,
+                   pg.role,
+                   pc.total_amount_due,
+                   pc.total_amount_accepted,
+                   pc.total_amount_scheduled,
+                   pc.total_amount_paid,
+                   pc.created_ts,
+                   pc.updated_ts,
+                   pg.peer_id,
+                   pg.payee_addr,
+                   pg.payer_addr,
+                   pg.total_amount_due       as agreement_total_amount_due,
+                   pg.total_amount_accepted  as agreement_total_amount_accepted,
+                   pg.total_amount_scheduled as agreement_total_amount_scheduled,
+                   pg.total_amount_paid      as agreement_total_amount_paid,
+                   pg.app_session_id,
+                   pg.created_ts             as agreement_created_ts,
+                   pg.updated_ts             as agreement_updated_ts
+            FROM pay_activity as pc
+                     JOIN pay_agreement as pg
+                          ON pc.agreement_id = pg.id and pc.role = pg.role and pc.owner_id = pg.owner_id;
+        `;
         let rows = db.prepare(query).all();
 
-        let agreements = {};
-        let activities = {};
         rows.forEach(row => {
             let el = {
                 activity_id: row.activity_id,
@@ -78,18 +80,36 @@ function activities() {
             }
             agreements[row.agreement_id] = agreement;
         });
-
-        for (let key in activities) {
-            let activity = activities[key];
-            console.log("Activity: ", activity);
-        }
-        for (let key in agreements) {
-            let agreement = agreements[key];
-            console.log("Agreement: ", agreement);
-        }
-
     })();
-
+    return {
+        "activities": Object.values(activities),
+        "agreements": Object.values(agreements)
+    }
 }
 
-activities();
+export function sum_of_accepted(activities) {
+    let sum = BigNumber(0);
+    for (let activity of activities) {
+        sum = sum.plus(activity.total_amount_accepted);
+    }
+    return sum;
+}
+export function sum_of_paid(activities) {
+    let sum = BigNumber(0);
+    for (let activity of activities) {
+        sum = sum.plus(activity.total_amount_paid);
+    }
+    return sum;
+}
+
+
+function activities() {
+    let res = get_activities_and_agreements();
+
+    for (let activity of res.activities) {
+        console.log("Activity: ", activity);
+    }
+    for (let agreement of res.agreements) {
+        console.log("Agreement: ", agreement);
+    }
+}
