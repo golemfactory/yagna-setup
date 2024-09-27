@@ -13,12 +13,12 @@ jobs:
         include:
           - restart: true
             one_account: false
-            interval: 1m
+            interval: 2m
             id: 0
 
           - restart: false
             one_account: true
-            interval: 2m
+            interval: 1m
             id: 1
 
     timeout-minutes: 20
