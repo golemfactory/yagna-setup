@@ -21,10 +21,10 @@ export function get_debit_notes() {
                    pdn.payment_due_date,
                    pdn.send_accept
             FROM pay_debit_note pdn
-            JOIN pay_activity pc
-                ON pc.id = pdn.activity_id AND pc.owner_id = pdn.owner_id
-            JOIN pay_agreement pg
-                ON pg.id = pc.agreement_id AND pg.owner_id = pc.owner_id
+                     JOIN pay_activity pc
+                          ON pc.id = pdn.activity_id AND pc.owner_id = pdn.owner_id
+                     JOIN pay_agreement pg
+                          ON pg.id = pc.agreement_id AND pg.owner_id = pc.owner_id
         `;
 
 

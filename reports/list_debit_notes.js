@@ -7,7 +7,6 @@ function debit_notes() {
         console.log(dn);
     }
 
-
     let number_of_settled_debit_notes = dns.filter(dn => dn.status === "SETTLED").length;
     let number_of_received_debit_notes = dns.filter(dn => dn.status === "RECEIVED").length;
     let number_of_accepted_debit_notes = dns.filter(dn => dn.status === "ACCEPTED").length;
