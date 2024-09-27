@@ -176,6 +176,20 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/provider_0/yagnadir
 
+      - name: Requestor debit notes
+        run: |
+          cd reports
+          node list_debit_notes.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider debit notes
+        run: |
+          cd reports
+          node list_debit_notes.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
       - name: Prepare logs
         if: always()
         run: |
