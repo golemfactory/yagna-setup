@@ -1,0 +1,215 @@
+name: Test with assets
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - restart: true
+            one_account: false
+            interval: 2m
+            id: 0
+
+          - restart: false
+            one_account: true
+            interval: 1m
+            id: 1
+
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and install binaries
+        run: |
+          /bin/bash download_binaries.sh
+
+      - name: Install binaries
+        run: |
+          sudo mkdir -p /usr/lib/yagna
+          sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
+          sudo mv golem/downloaded/* /usr/bin/ 
+
+      - name: Run central-net router
+        run: |
+          ya-sb-router -l tcp://127.0.0.1:5555&
+          echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
+
+      - name: Prepare runtime
+        run: |
+          python advanced/prepare_runtime.py --mode central --payments full
+
+      - name: Download private key
+        run: |
+          set -x
+          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
+          echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
+          # Check if the downloaded key is a valid private key
+          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
+
+      - name: Run requestor second account
+        if: matrix.one_account != true
+        run: |
+          cd golem/requestor
+          yagna service run&
+          sleep 4
+          yagna id create --password= --from-private-key=$(cat ../../downloaded_private_key_0.key) identity0
+          rm ../../downloaded_private_key_0.key
+          yagna app-key create --id identity0 dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+          echo YAGNA_ACCOUNT_0=$(yagna id show identity0 | grep -oP '(?<=nodeId: )[^\s]+') >> $GITHUB_ENV
+
+      - name: Run requestor one account
+        if: matrix.one_account
+        run: |
+          cd golem/requestor
+          echo "YAGNA_AUTOCONF_ID_SECRET=$(cat ../../downloaded_private_key_0.key)" >> .env
+          rm ../../downloaded_private_key_0.key
+          yagna service run&
+          sleep 4
+          yagna app-key create dev_req | sed 's/^/\YAGNA_REQUESTOR_APPKEY=/' >> $GITHUB_ENV
+          echo YAGNA_ACCOUNT_0=$(yagna id show | grep -oP '(?<=nodeId: )[^\s]+') >> $GITHUB_ENV
+
+      - name: Restart requestor if needed
+        if: matrix.restart
+        run: |
+          cd golem/requestor
+          yagna service shutdown
+          sleep 4
+          yagna service run&
+          sleep 4
+
+      - name: Set payment interval
+        run: |
+          cd golem/requestor
+          yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
+          yagna payment process info --account $YAGNA_ACCOUNT_0
+
+      - name: Run provider
+        run: |
+          sudo chown $USER /dev/kvm 
+          cd golem/provider_0
+          cat .env
+          golemsp setup --no-interactive
+          yagna service run&
+          sleep 6
+          ya-provider run&
+          sleep 4
+          env > yagnadir/env.log
+          env > providerdir/env.log
+        env:
+          YA_CONSENT_INTERNAL: "allow"
+          YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Run debit note test
+        run: |
+          cd examples/multi-allocation-double-activity
+          echo "EXAMPLE_STEPS=2" >> .env
+          npm install --silent
+          node index.mjs
+
+      - name: Wait for payments
+        run: |
+          cd reports
+          npm install --silent
+          node wait_for_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Stop requestor
+        if: always()
+        run: |
+          cd golem/requestor
+          yagna service shutdown
+
+      - name: Stop provider
+        if: always()
+        run: |
+          cd golem/provider_0
+          yagna service shutdown
+          sleep 5
+
+      - name: Requestor order items
+        run: |
+          cd reports
+          node list_order_items.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider order items
+        run: |
+          cd reports
+          node list_order_items.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Requestor activities and agreements
+        run: |
+          cd reports
+          node list_activities.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider activities and agreements
+        run: |
+          cd reports
+          node list_activities.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Requestor payments
+        run: |
+          cd reports
+          node list_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider payments
+        run: |
+          cd reports
+          node list_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Requestor debit notes
+        run: |
+          cd reports
+          node list_debit_notes.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider debit notes
+        run: |
+          cd reports
+          node list_debit_notes.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Requestor allocation expenditures
+        run: |
+          cd reports
+          node list_expenditures.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Prepare logs
+        if: always()
+        run: |
+          # remove image cache from upload
+          rm -r golem/provider_0/providerdir/exe-unit/cache
+          tar --zstd -cf data_${{ matrix.id }}.tar.zst \
+              golem/requestor/yagnadir \
+              golem/provider_0/providerdir \
+              golem/provider_0/yagnadir
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data_${{ matrix.id }}.tar.zst
+          path: data_${{ matrix.id }}.tar.zst
