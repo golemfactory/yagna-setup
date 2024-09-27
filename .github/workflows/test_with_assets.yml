@@ -162,6 +162,20 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/provider_0/yagnadir
 
+      - name: Requestor payments
+        run: |
+          cd reports
+          node list_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+      - name: Provider payments
+        run: |
+          cd reports
+          node list_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
       - name: Prepare logs
         if: always()
         run: |
