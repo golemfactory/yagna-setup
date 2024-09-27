@@ -1,4 +1,4 @@
-import {open_payments_db} from './utils.js';
+import {open_payments_db} from '../common/utils.js';
 import BigNumber from "bignumber.js";
 
 
@@ -94,6 +94,15 @@ export function sum_of_accepted(activities) {
     }
     return sum;
 }
+
+export function sum_of_scheduled(activities) {
+    let sum = BigNumber(0);
+    for (let activity of activities) {
+        sum = sum.plus(activity.total_amount_accepted);
+    }
+    return sum;
+}
+
 export function sum_of_paid(activities) {
     let sum = BigNumber(0);
     for (let activity of activities) {
@@ -103,13 +112,3 @@ export function sum_of_paid(activities) {
 }
 
 
-function activities() {
-    let res = get_activities_and_agreements();
-
-    for (let activity of res.activities) {
-        console.log("Activity: ", activity);
-    }
-    for (let agreement of res.agreements) {
-        console.log("Agreement: ", agreement);
-    }
-}

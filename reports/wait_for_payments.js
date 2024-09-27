@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
-import {get_order_item_documents} from "./order_items.js";
-import {get_activities_and_agreements, sum_of_accepted, sum_of_paid} from "./activities.js";
+import {get_order_item_documents} from "./common/order_items.js";
+import {get_activities_and_agreements, sum_of_accepted, sum_of_paid, sum_of_scheduled} from "./common/activities.js";
 
 
 let loop_no = 0;
@@ -15,6 +15,7 @@ while (true) {
     let res = get_activities_and_agreements();
 
     let agreement_sum_accepted = sum_of_accepted(res.agreements);
+    let agreement_sum_scheduled = sum_of_scheduled(res.agreements);
     let agreement_sum_paid = sum_of_paid(res.agreements);
 
     if (docs.length > 0) {
