@@ -47,9 +47,9 @@ function activities() {
                 pg.payee_addr,
                 pg.payer_addr,
                 pg.total_amount_due as agreement_total_amount_due,
-                pg.total_amount_accepted as agreement_total_amount_due,
-                pg.total_amount_scheduled as agreement_total_amount_due,
-                pg.total_amount_paid as agreement_total_amount_due,
+                pg.total_amount_accepted as agreement_total_amount_accepted,
+                pg.total_amount_scheduled as agreement_total_amount_scheduled,
+                pg.total_amount_paid as agreement_total_amount_paid,
                 pg.app_session_id,
                 pg.created_ts as agreement_created_ts,
                 pg.updated_ts as agreement_updated_ts
