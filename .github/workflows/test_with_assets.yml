@@ -119,6 +119,8 @@ jobs:
           cd reports
           npm install --silent
           node wait_for_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
 
       - name: Stop requestor
         if: always()
