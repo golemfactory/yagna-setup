@@ -136,22 +136,30 @@ jobs:
       - name: Requestor order items
         run: |
           cd reports
-          node order_items.js --db ../golem/requestor/yagnadir/payment.db
+          node order_items.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
 
       - name: Provider order items
         run: |
           cd reports
-          node order_items.js --db ../golem/provider_0/yagnadir/payment.db
+          node order_items.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
 
       - name: Requestor activities and agreements
         run: |
           cd reports
-          node activities.js --db ../golem/requestor/yagnadir/payment.db
+          node activities.js
+        env:
+          YAGNA_DATADIR: ../golem/requestor/yagnadir
 
       - name: Provider activities and agreements
         run: |
           cd reports
-          node activities.js --db ../golem/provider_0/yagnadir/payment.db
+          node activities.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_0/yagnadir
 
       - name: Prepare logs
         if: always()

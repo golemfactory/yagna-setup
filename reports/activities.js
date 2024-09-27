@@ -1,34 +1,7 @@
-import Database from 'better-sqlite3';
-import BigNumber from "bignumber.js";
-
-// Get command-line arguments
-const args = process.argv.slice(2); // Skip the first two elements
-
-// Simple command-line argument parsing
-let dbLocation = '';
-
-for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-        case '--db':
-            dbLocation = args[i + 1];
-            i++; // Skip next argument since it's the value of --file
-            break;
-        default:
-            console.log(`Unknown argument: ${args[i]}`);
-    }
-}
-
-if (dbLocation) {
-    console.log(`Using DB location: ${dbLocation}`);
-} else {
-    console.log('No db location provided. Use --db to specify.');
-    dbLocation = 'payment.db'
-}
-
-
+import { open_payments_db } from './utils.js';
 
 function activities() {
-    const db = new Database(dbLocation);
+    const db = open_payments_db();
     db.transaction(() => {
         let query = `
             SELECT             
