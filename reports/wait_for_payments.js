@@ -40,7 +40,7 @@ while (true) {
             console.log("Agreements are not yet paid");
             continue;
         }
-        if (total_sum != agreement_sum_accepted) {
+        if (!total_sum.eq(agreement_sum_accepted)) {
             console.log("Total sum of items is not equal to total sum of agreements");
             continue;
         }
