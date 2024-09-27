@@ -98,7 +98,7 @@ export function sum_of_accepted(activities) {
 export function sum_of_scheduled(activities) {
     let sum = BigNumber(0);
     for (let activity of activities) {
-        sum = sum.plus(activity.total_amount_accepted);
+        sum = sum.plus(activity.total_amount_scheduled);
     }
     return sum;
 }
