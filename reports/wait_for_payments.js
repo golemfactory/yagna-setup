@@ -30,6 +30,7 @@ while (true) {
 
         console.log("Total order item amount: ", total_sum.toString());
         console.log("Total order item paid amount: ", paid_sum.toString());
+        console.log("Total agreement scheduled amount: ", agreement_sum_scheduled.toString());
         console.log("Total agreement accepted amount: ", agreement_sum_accepted.toString());
         console.log("Total agreement paid amount: ", agreement_sum_paid.toString());
 
