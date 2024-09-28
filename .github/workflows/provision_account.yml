@@ -3,6 +3,13 @@ on:
   schedule:
     - cron: "17,47 * * * *"
 
+  workflow_dispatch:
+    - inputs:
+        empty:
+          description: "Empty"
+          required: true
+          default: "10"
+
 jobs:
   provision-account:
     strategy:
