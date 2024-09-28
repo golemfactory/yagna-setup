@@ -1,6 +1,8 @@
+import {privateKeyToAddress} from "viem/accounts";
+
 const config = {
   funder: {
-    address: "0xc14a990551b3e87215277961d7a45288d0c199b4",
+    address: privateKeyToAddress(process.env.FUNDER_PRIVATE_KEY),
     privateKey: process.env.FUNDER_PRIVATE_KEY,
     nonceSpace: 1000000,
     depositDurationHours: 1,
