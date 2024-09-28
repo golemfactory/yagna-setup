@@ -1,4 +1,4 @@
-name: Test with assets
+name: Multi allocation double activity
 on:
   push:
     branches: [ "main" ]
@@ -45,13 +45,21 @@ jobs:
         run: |
           python advanced/prepare_runtime.py --mode central --payments full
 
-      - name: Download private key
+      - name: Download private key 0
         run: |
           set -x
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_0.key
           echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
+
+      - name: Download private key 1
+        run: |
+          set -x
+          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get > downloaded_private_key_1.key
+          echo "Keys left $(curl -sSL https://polygongas.org/keys/count)"
+          # Check if the downloaded key is a valid private key
+          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_1.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_1.key)"; exit 1; }
 
       - name: Run requestor second account
         if: matrix.one_account != true
@@ -109,7 +117,8 @@ jobs:
       - name: Run debit note test
         run: |
           cd examples/multi-allocation-double-activity
-          echo "EXAMPLE_STEPS=2" >> .env
+          echo "FUNDER_PRIVATE_KEY=$(cat ../../downloaded_private_key_1.key)" >> .env
+          echo "SPENDER_ADDRESS=$YAGNA_ACCOUNT_0" >> .env
           npm install --silent
           node index.mjs
 
