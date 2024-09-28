@@ -34,22 +34,25 @@ jobs:
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
 
-      - name: Generate ethereum accounts
+      - name: Provision 10 ethereum accounts
         if: env.should_continue == 'true'
         run: |
-          mkdir funding && cd funding
-          erc20_processor generate-key -n 1 > .env
-          erc20_processor get-dev-eth
-          erc20_processor mint-test-tokens
-          erc20_processor run
-          erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token glm --amount 900
-          erc20_processor run
-          erc20_processor balance
+          for i in {1..1}; do
+            mkdir -p funding_$i && cd funding_$i
           
-          cat .env | grep ETH_ADDRESS_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
-          cat .env | grep ETH_PRIVATE_KEY_ | sed "s/#\s//g" | sed "s/:\s/=/g" >> $GITHUB_ENV
-
-      - name: Upload account
-        if: env.should_continue == 'true'
-        run: |
-          curl -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY_0 https://polygongas.org/keys/add
+            erc20_processor generate-key -n 1 > .env
+            erc20_processor get-dev-eth
+            erc20_processor mint-test-tokens
+            erc20_processor run
+            erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token glm --amount 900
+            erc20_processor run
+            erc20_processor balance
+          
+            # Extract the private key
+            ETH_PRIVATE_KEY=$(cat .env | grep ETH_PRIVATE_KEY_0 | sed "s/#\s//g" | sed "s/ETH_PRIVATE_KEY_0:\s//g")
+          
+            # Upload the account to the server
+            curl -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY https://polygongas.org/keys/add
+          
+            cd ..
+          done
