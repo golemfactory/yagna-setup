@@ -1,7 +1,7 @@
 name: Provision account
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "17,47 * * * *"
 
 jobs:
   provision-account:
@@ -37,7 +37,7 @@ jobs:
       - name: Provision 10 ethereum accounts
         if: env.should_continue == 'true'
         run: |
-          for i in {1..1}; do
+          for i in {1..10}; do
             mkdir -p funding_$i && cd funding_$i
           
             erc20_processor generate-key -n 1 > .env
