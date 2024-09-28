@@ -5,7 +5,7 @@ const config = {
     nonceSpace: 1000000,
     depositDurationHours: 1,
   },
-  yagnaAppKey: "try_golem",
+  yagnaAppKey: process.env.YAGNA_REQUESTOR_APPKEY,
   spender: {
     address: process.env.SPENDER_ADDRESS,
   },
