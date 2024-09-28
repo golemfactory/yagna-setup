@@ -117,7 +117,7 @@ jobs:
       - name: Run debit note test
         run: |
           cd examples/multi-allocation-double-activity
-          echo "FUNDER_PRIVATE_KEY=$(cat ../../downloaded_private_key_1.key)" >> .env
+          echo "FUNDER_PRIVATE_KEY=0x$(cat ../../downloaded_private_key_1.key)" >> .env
           echo "SPENDER_ADDRESS=$YAGNA_ACCOUNT_0" >> .env
           npm install --silent
           node index.mjs
