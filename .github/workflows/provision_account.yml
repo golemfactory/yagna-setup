@@ -41,6 +41,22 @@ jobs:
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
 
+      - name: Give back up to 10 ethereum from used accounts
+        continue-on-error: true
+        run: |
+          set -x
+          for i in {1..10}; do
+            mkdir -p back_$i && cd back_$i
+            curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/used_accounts > used_private_key.key
+            echo "Used keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
+            # Check if the downloaded key is a valid private key
+            grep -qE '^[a-fA-F0-9]{64}$' used_private_key.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_1.key)"; exit 1; }
+            echo "ETH_PRIVATE_KEYS=$(cat used_private_key.key)" >> .env
+            erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token eth --all
+            erc20_processor run
+            cd ..
+          done
+
       - name: Provision 10 ethereum accounts
         if: env.should_continue == 'true'
         run: |
@@ -63,3 +79,4 @@ jobs:
           
             cd ..
           done
+      
