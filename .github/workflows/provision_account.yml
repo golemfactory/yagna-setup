@@ -24,7 +24,7 @@ jobs:
       - name: Check how many accounts are provisioned
         id: check_count # Create an ID for the step so we can refer to its output
         run: |
-          COUNT=$(curl -sSL https://polygongas.org/keys/count/unused_accounts)
+          COUNT=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)
           echo "Provisioned accounts count: $COUNT"
           if [ "$COUNT" -gt 100 ]; then
             echo "Too many accounts provisioned ($COUNT). Skipping remaining steps."
