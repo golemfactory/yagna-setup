@@ -213,3 +213,9 @@ jobs:
         with:
           name: data_${{ matrix.id }}.tar.zst
           path: data_${{ matrix.id }}.tar.zst
+
+      - name: Upload used private key back to the server
+        if: always()
+        run: |
+          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
+          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $(cat downloaded_private_key_0.key) https://polygongas.org/keys/add/used_accounts
