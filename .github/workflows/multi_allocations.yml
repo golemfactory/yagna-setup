@@ -11,20 +11,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - restart: true
-            one_account: false
-            interval: 2m
-            id: 0
-
           - restart: false
             one_account: true
             interval: 1m
+            id: 0
+
+          - restart: true
+            one_account: false
+            interval: 2m
             id: 1
 
           - restart: false
             one_account: true
-            interval: 10m
+            interval: 5m
             id: 2
+
+          - restart: false
+            one_account: true
+            interval: 10m
+            id: 3
 
     timeout-minutes: 20
     runs-on: ubuntu-latest
