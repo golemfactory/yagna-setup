@@ -51,7 +51,7 @@ jobs:
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' used_private_key.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_1.key)"; exit 1; }
           echo "PRIVATE_KEYS=$(cat used_private_key.key)" >> .env
-          erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token eth --amount all
+          erc20_processor transfer --recipient 0x5b984629E2Cc7570cBa7dD745b83c3dD23Ba6d0f --token eth --all
           erc20_processor run
 
       - name: Provision 10 ethereum accounts
