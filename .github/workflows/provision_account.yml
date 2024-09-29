@@ -24,7 +24,7 @@ jobs:
       - name: Check how many accounts are provisioned
         id: check_count # Create an ID for the step so we can refer to its output
         run: |
-          COUNT=$(curl -sSL https://polygongas.org/keys/count)
+          COUNT=$(curl -sSL https://polygongas.org/keys/count/unused_accounts)
           echo "Provisioned accounts count: $COUNT"
           if [ "$COUNT" -gt 100 ]; then
             echo "Too many accounts provisioned ($COUNT). Skipping remaining steps."
@@ -59,7 +59,7 @@ jobs:
             ETH_PRIVATE_KEY=$(cat .env | grep ETH_PRIVATE_KEY_0 | sed "s/#\s//g" | sed "s/ETH_PRIVATE_KEY_0:\s//g")
           
             # Upload the account to the server
-            curl -sSL -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY https://polygongas.org/keys/add
+            curl -sSL -X POST -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $ETH_PRIVATE_KEY https://polygongas.org/keys/add/unused_accounts
           
             cd ..
           done
