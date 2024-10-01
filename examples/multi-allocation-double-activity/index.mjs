@@ -1,3 +1,4 @@
+import "dotenv/config";
 import chalk from "chalk";
 
 import { GolemNetwork, GolemPaymentError } from "@golem-sdk/golem-js";
@@ -6,9 +7,8 @@ import { spawnContractObserver } from "./observer.mjs";
 import { runUserActions } from "./user.mjs";
 import { readFileSync } from "fs";
 import { filter, map, switchMap, take } from "rxjs";
-
+//add dotenv
 import config from "./config.mjs";
-
 const debitNoteTimeout = parseInt(process.env.DEBIT_NOTE_TIMEOUT || "20");
 const debitNoteInterval = parseInt(process.env.DEBIT_NOTE_INTERVAL || "15");
 

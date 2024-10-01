@@ -55,8 +55,10 @@ function getTimeStamp() {
 const myProposalFilter = (proposal) =>
     Boolean(proposal.provider.name.indexOf("testnet") === -1);
 
-const subnetTag = process.env.YAGNA_SUBNET || "change_me";
-const appKey = process.env.YAGNA_APPKEY || "66iiOdkvV29";
+const subnetTag = process.env.YAGNA_SUBNET || "public";
+const appKey = process.env.YAGNA_REQUESTOR_APPKEY || "66iiOdkvV29";
+console.log("Using subnet tag:", subnetTag);
+console.log("Using app key:", appKey);
 
 const debitNoteTimeout = parseInt(process.env.DEBIT_NOTE_TIMEOUT || "10");
 const debitNoteInterval = parseInt(process.env.DEBIT_NOTE_INTERVAL || "15");
@@ -220,7 +222,7 @@ async function connectAndRun(glm) {
     console.log("Started testing provider %s", exe.provider.name);
 
     let stepNo = 0;
-    let numberOfRuns = 10;
+    let numberOfRuns = parseInt(process.env.EXAMPLE_STEPS || "10");
     while (stepNo < numberOfRuns) {
         await exe.run("sleep 30");
         console.log(`Step ${stepNo} finished`);

@@ -1,3 +1,4 @@
 /golem
 /.idea
 /examples/deposit-ts/dist
+/payment.db

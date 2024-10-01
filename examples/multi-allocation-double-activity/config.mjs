@@ -1,14 +1,15 @@
+import {privateKeyToAddress} from "viem/accounts";
+
 const config = {
   funder: {
-    address: "0xc14a990551b3e87215277961d7a45288d0c199b4",
-    privateKey:
-      "0xcb102abfa6370a3d2cd527ae8c49d7cfd70ca72ea13bc8106dd420bab8250521",
+    address: privateKeyToAddress(process.env.FUNDER_PRIVATE_KEY),
+    privateKey: process.env.FUNDER_PRIVATE_KEY,
     nonceSpace: 1000000,
     depositDurationHours: 1,
   },
-  yagnaAppKey: "try_golem",
+  yagnaAppKey: process.env.YAGNA_REQUESTOR_APPKEY,
   spender: {
-    address: "0x7459dbaf9b1b1b19197eadcd3f66a3ec93504589",
+    address: process.env.SPENDER_ADDRESS,
   },
   rpcUrl: "https://holesky.rpc-node.dev.golem.network",
   lockPaymentContract: {
