@@ -125,7 +125,7 @@ jobs:
       - name: Run providers
         run: |
           sudo chown $USER /dev/kvm 
-          for i in $(seq 0 ${{ matrix.number_of_providers }}); do
+          for i in $(seq 0 ${{ matrix.number_of_providers }} - 1); do
             cd golem/provider_$i
             cat .env
             golemsp setup --no-interactive
