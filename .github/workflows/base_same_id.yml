@@ -53,7 +53,7 @@ jobs:
 
       - name: Prepare runtime
         run: |
-          python advanced/prepare_runtime.py --mode central --payments full
+          python advanced/prepare_runtime.py --mode central --payments full --num-providers 2
 
       - name: Download private key 0
         run: |
@@ -106,7 +106,7 @@ jobs:
           yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
           yagna payment process info --account $YAGNA_ACCOUNT_0
 
-      - name: Run provider
+      - name: Run provider 0
         run: |
           sudo chown $USER /dev/kvm 
           cd golem/provider_0
@@ -119,7 +119,21 @@ jobs:
           env > yagnadir/env.log
           env > providerdir/env.log
         env:
-          YA_CONSENT_INTERNAL: "allow"
+          YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Run provider 1
+        run: |
+          sudo chown $USER /dev/kvm 
+          cd golem/provider_1
+          cat .env
+          golemsp setup --no-interactive
+          yagna service run&
+          sleep 6
+          ya-provider run&
+          sleep 4
+          env > yagnadir/env.log
+          env > providerdir/env.log
+        env:
           YA_CONSENT_EXTERNAL: "allow"
 
       - name: Run base same id test
