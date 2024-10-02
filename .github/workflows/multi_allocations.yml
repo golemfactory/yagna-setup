@@ -110,10 +110,10 @@ jobs:
           yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
           yagna payment process info --account $YAGNA_ACCOUNT_0
 
-      - name: Run provider
+      - name: Run providers
         run: |
+          sudo chown $USER /dev/kvm 
           for i in $(seq 0 ${{ matrix.number_of_providers }}); do
-            sudo chown $USER /dev/kvm 
             cd golem/provider_$i
             cat .env
             golemsp setup --no-interactive
@@ -122,6 +122,7 @@ jobs:
             ya-provider run&
             sleep 4
             env > yagnadir/env.log
+            cd ../..
           done
         env:
           YA_CONSENT_EXTERNAL: "allow"
