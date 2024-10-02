@@ -176,13 +176,6 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider order items
-        run: |
-          cd reports
-          node list_order_items.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
-
       - name: Requestor activities and agreements
         run: |
           cd reports
@@ -193,9 +186,9 @@ jobs:
       - name: Provider activities and agreements
         run: |
           cd reports
-          node list_activities.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir && node list_activities.js
+          done
 
       - name: Requestor payments
         run: |
@@ -207,9 +200,9 @@ jobs:
       - name: Provider payments
         run: |
           cd reports
-          node list_payments.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir && node list_payments.js
+          done
 
       - name: Requestor debit notes
         run: |
@@ -221,9 +214,9 @@ jobs:
       - name: Provider debit notes
         run: |
           cd reports
-          node list_debit_notes.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir && node list_debit_notes.js
+          done
 
       - name: Requestor allocation expenditures
         run: |
@@ -236,11 +229,15 @@ jobs:
         if: always()
         run: |
           # remove image cache from upload
-          rm -r golem/provider_0/providerdir/exe-unit/cache
-          tar --zstd -cf data_${{ matrix.id }}.tar.zst \
-              golem/requestor/yagnadir \
-              golem/provider_0/providerdir \
-              golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            rm -r golem/provider_$i/providerdir/exe-unit/cache
+          done  
+          tar --zstd -cf data_${{ matrix.id }}.tar.zst golem/requestor/yagnadir
+
+          # append provider files
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            tar --zstd -rf data_${{ matrix.id }}.tar.zst golem/provider_$i/providerdir
+          done
 
       - name: Upload logs
         if: always()
