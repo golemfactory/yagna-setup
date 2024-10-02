@@ -232,19 +232,21 @@ jobs:
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
             rm -r golem/provider_$i/providerdir/exe-unit/cache
           done  
-          tar --zstd -cf data_${{ matrix.id }}.tar.zst golem/requestor/yagnadir
+          tar -cf data_${{ matrix.id }}.tar golem/requestor/yagnadir
 
           # append provider files
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
-            tar --zstd -rf data_${{ matrix.id }}.tar.zst golem/provider_$i/providerdir
+            tar -rf data_${{ matrix.id }}.tar golem/provider_$i/providerdir
           done
+          
+          xz data_${{ matrix.id }}.tar
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: data_${{ matrix.id }}.tar.zst
-          path: data_${{ matrix.id }}.tar.zst
+          name: data_${{ matrix.id }}.tar.xz
+          path: data_${{ matrix.id }}.tar.xz
 
       - name: Upload used private key back to the server
         if: always()
