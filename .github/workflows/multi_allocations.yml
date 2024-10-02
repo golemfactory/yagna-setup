@@ -168,6 +168,7 @@ jobs:
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
             cd golem/provider_$i
             yagna service shutdown
+            cd ../..
           done
           sleep 5
 
