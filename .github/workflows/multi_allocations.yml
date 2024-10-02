@@ -15,24 +15,36 @@ jobs:
             one_account: true
             interval: 1m
             id: 0
-            number_of_providers: 2
+            number_of_providers: 1
 
           - restart: true
             one_account: false
             interval: 2m
             id: 1
-            number_of_providers: 2
+            number_of_providers: 1
 
           - restart: false
             one_account: true
             interval: 5m
             id: 2
-            number_of_providers: 2
+            number_of_providers: 1
 
           - restart: false
             one_account: true
             interval: 10m
             id: 3
+            number_of_providers: 1
+
+          - restart: false
+            one_account: true
+            interval: 1m
+            id: 4
+            number_of_providers: 2
+
+          - restart: false
+            one_account: true
+            interval: 10m
+            id: 5
             number_of_providers: 2
 
     timeout-minutes: 20
