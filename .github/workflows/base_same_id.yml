@@ -122,13 +122,13 @@ jobs:
           YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
 
-      - name: Run debit note test
+      - name: Run base same id test
         run: |
           cd examples/base-same-id
           echo "FUNDER_PRIVATE_KEY=0x$(cat ../../downloaded_private_key_1.key)" >> .env
           echo "SPENDER_ADDRESS=$YAGNA_ACCOUNT_0" >> .env
           npm install --silent
-          node base_sameID.mjs
+          node base_sameID.js
 
       - name: Wait for payments
         run: |
