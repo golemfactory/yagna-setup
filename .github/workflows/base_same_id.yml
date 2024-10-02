@@ -173,13 +173,6 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider order items
-        run: |
-          cd reports
-          node list_order_items.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
-
       - name: Requestor activities and agreements
         run: |
           cd reports
@@ -187,12 +180,19 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider activities and agreements
+      - name: Provider 0 activities and agreements
         run: |
           cd reports
           node list_activities.js
         env:
           YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Provider 1 activities and agreements
+        run: |
+          cd reports
+          node list_activities.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_1/yagnadir
 
       - name: Requestor payments
         run: |
@@ -201,12 +201,19 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider payments
+      - name: Provider 0 payments
         run: |
           cd reports
           node list_payments.js
         env:
           YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Provider 1 payments
+        run: |
+          cd reports
+          node list_payments.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_1/yagnadir
 
       - name: Requestor debit notes
         run: |
@@ -215,12 +222,19 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider debit notes
+      - name: Provider 0 debit notes
         run: |
           cd reports
           node list_debit_notes.js
         env:
           YAGNA_DATADIR: ../golem/provider_0/yagnadir
+
+      - name: Provider 1 debit notes
+        run: |
+          cd reports
+          node list_debit_notes.js
+        env:
+          YAGNA_DATADIR: ../golem/provider_1/yagnadir
 
       - name: Requestor allocation expenditures
         run: |
