@@ -75,7 +75,7 @@ jobs:
         run: |
           set -x
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/unused_accounts > downloaded_private_key_0.key
-          echo "Keys left $(curl -sSL https://polygongas.org/keys/count/unused_accounts)"
+          echo "Keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
 
@@ -83,7 +83,7 @@ jobs:
         run: |
           set -x
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/unused_accounts > downloaded_private_key_1.key
-          echo "Keys left $(curl -sSL https://polygongas.org/keys/count/unused_accounts)"
+          echo "Keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_1.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_1.key)"; exit 1; }
 
