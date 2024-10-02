@@ -1,9 +1,9 @@
 name: Multi allocations
 on:
   push:
-    branches: [ "main1" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main1" ]
+    branches: [ "main" ]
 
 jobs:
   multi-allocations:
@@ -15,21 +15,25 @@ jobs:
             one_account: true
             interval: 1m
             id: 0
+            number_of_providers: 2
 
           - restart: true
             one_account: false
             interval: 2m
             id: 1
+            number_of_providers: 2
 
           - restart: false
             one_account: true
             interval: 5m
             id: 2
+            number_of_providers: 2
 
           - restart: false
             one_account: true
             interval: 10m
             id: 3
+            number_of_providers: 2
 
     timeout-minutes: 20
     runs-on: ubuntu-latest
@@ -53,7 +57,7 @@ jobs:
 
       - name: Prepare runtime
         run: |
-          python advanced/prepare_runtime.py --mode central --payments full
+          python advanced/prepare_runtime.py --mode central --payments full --num-providers ${{ matrix.number_of_providers }}
 
       - name: Download private key 0
         run: |
@@ -108,18 +112,18 @@ jobs:
 
       - name: Run provider
         run: |
-          sudo chown $USER /dev/kvm 
-          cd golem/provider_0
-          cat .env
-          golemsp setup --no-interactive
-          yagna service run&
-          sleep 6
-          ya-provider run&
-          sleep 4
-          env > yagnadir/env.log
-          env > providerdir/env.log
+          for i in $(seq 0 ${{ matrix.number_of_providers }}); do
+            sudo chown $USER /dev/kvm 
+            cd golem/provider_$i
+            cat .env
+            golemsp setup --no-interactive
+            yagna service run&
+            sleep 6
+            ya-provider run&
+            sleep 4
+            env > yagnadir/env.log
+          done
         env:
-          YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
 
       - name: Run debit note test
