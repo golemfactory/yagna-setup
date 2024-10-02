@@ -26,7 +26,7 @@ jobs:
         run: |
           COUNT=$(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)
           echo "Provisioned accounts count: $COUNT"
-          if [ "$COUNT" -gt 100 ]; then
+          if [ "$COUNT" -gt 400 ]; then
             echo "Too many accounts provisioned ($COUNT). Skipping remaining steps."
             echo "should_continue=false" >> $GITHUB_ENV
           else
