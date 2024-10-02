@@ -237,7 +237,9 @@ jobs:
           tar --zstd -cf data_${{ matrix.id }}.tar.zst \
               golem/requestor/yagnadir \
               golem/provider_0/providerdir \
-              golem/provider_0/yagnadir
+              golem/provider_0/yagnadir \
+              golem/provider_1/providerdir \
+              golem/provider_1/yagnadir
 
       - name: Upload logs
         if: always()
