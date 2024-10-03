@@ -90,6 +90,18 @@ jobs:
           yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
           yagna payment process info --account $YAGNA_ACCOUNT_0
 
+      - name: Prepare provider
+        run: |
+          cd golem/provider_0
+          cat .env
+          golemsp setup --no-interactive
+          ya-provider preset list
+          ya-provider preset update --no-interactive --name=vm --price="cpu=0.666" --price="duration=0.211"
+          echo "Presets after change:"
+          ya-provider preset list
+          env > yagnadir/env.log
+          env > providerdir/env.log
+
       - name: Run provider
         run: |
           sudo chown $USER /dev/kvm 
@@ -98,14 +110,8 @@ jobs:
           golemsp setup --no-interactive
           yagna service run&
           sleep 6
-          ya-provider preset list
-          ya-provider preset update --no-interactive --name=vm --price="cpu=0.666" --price="duration=0.211"
-          echo "Presets after change:"
-          ya-provider preset list
           ya-provider run&
           sleep 4
-          env > yagnadir/env.log
-          env > providerdir/env.log
         env:
           YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
