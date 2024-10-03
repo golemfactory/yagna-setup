@@ -217,6 +217,8 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
+      # *** Prepare logs by removing binary images and pack all logs and db together ***
+
       - name: Prepare logs
         if: always()
         run: |
@@ -235,14 +237,20 @@ jobs:
           xz data_${{ matrix.id }}.tar
           mv data_${{ matrix.id }}.tar.xz data_${{ matrix.id }}.tar.xz
 
+      # *** Upload logs ***
+
       - name: Upload logs - Set current date
+        if: always()
         run: echo "CURRENT_DATE_FOR_UPLOAD=$(cat date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: data_${{ matrix.id }}_${{env.CURRENT_DATE_FOR_UPLOAD}}.tar.xz
           path: data_${{ matrix.id }}.tar.xz
+
+      # *** Upload used private key back to the server ***
 
       - name: Upload used private key back to the server
         if: always()
