@@ -124,7 +124,7 @@ jobs:
             golemsp setup --no-interactive
             echo "\n***** Provider $i - Presets before change: *****\n"
             ya-provider preset list
-            ya-provider preset update --no-interactive --name=vm --price="cpu=0.016" --price="duration=0.511"
+            ya-provider preset update --no-interactive --name=vm --price="cpu=0.0016" --price="duration=0.12"
             echo "\n***** Provider $i - Presets after change: *****\n"
             ya-provider preset list
             cd ../..

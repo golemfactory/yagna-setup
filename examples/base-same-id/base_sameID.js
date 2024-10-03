@@ -70,8 +70,8 @@ try {
       pricing: {
         model: "linear",
         maxStartPrice: 2.0,
-        maxCpuPerHourPrice: 100.0,
-        maxEnvPerHourPrice: 200.0,
+        maxCpuPerHourPrice: 10.0,
+        maxEnvPerHourPrice: 450.0,
       },
       offerProposalFilter: myProposalFilter,
     },
