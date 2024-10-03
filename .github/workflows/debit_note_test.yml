@@ -8,6 +8,7 @@ on:
 
 jobs:
   run_test:
+    name: Debit note test
     strategy:
       fail-fast: false
       matrix:
