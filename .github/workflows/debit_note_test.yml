@@ -30,6 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+#### prepare binaries
+
       - name: Download and install binaries
         run: |
           /bin/bash download_binaries.sh
@@ -154,19 +156,14 @@ jobs:
           done
           sleep 5
 
+      # *** Report analysis of entities ***
+
       - name: Requestor order items
         run: |
           cd reports
           node list_order_items.js
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
-
-      - name: Provider order items
-        run: |
-          cd reports
-          node list_order_items.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
 
       - name: Requestor activities and agreements
         run: |
@@ -185,9 +182,7 @@ jobs:
       - name: Requestor payments
         run: |
           cd reports
-          node list_payments.js
-        env:
-          YAGNA_DATADIR: ../golem/requestor/yagnadir
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_payments.js
 
       - name: Providers payments
         run: |
@@ -199,9 +194,7 @@ jobs:
       - name: Requestor debit notes
         run: |
           cd reports
-          node list_debit_notes.js
-        env:
-          YAGNA_DATADIR: ../golem/requestor/yagnadir
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_debit_notes.js
 
       - name: Providers debit notes
         run: |
@@ -213,9 +206,7 @@ jobs:
       - name: Requestor allocation expenditures
         run: |
           cd reports
-          node list_expenditures.js
-        env:
-          YAGNA_DATADIR: ../golem/requestor/yagnadir
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_expenditures.js
 
       # *** Prepare logs by removing binary images and pack all logs and db together ***
 
