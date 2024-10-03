@@ -54,13 +54,13 @@ try {
       console.log(event[0].demand.details.prototype.properties[8].value);
     });
   }
-  const allocation1 = await glm.payment.createAllocation({
+  const allocation1 = await glm1.payment.createAllocation({
     budget: 45.0,
     paymentPlatform: "erc20-holesky-tglm",
     expirationSec: 3600
   });
 
-  const allocation2 = await glm.payment.createAllocation({
+  const allocation2 = await glm2.payment.createAllocation({
     budget: 45.0,
     paymentPlatform: "erc20-holesky-tglm",
     expirationSec: 3600
