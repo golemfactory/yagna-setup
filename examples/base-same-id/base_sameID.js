@@ -54,8 +54,19 @@ try {
       console.log(event[0].demand.details.prototype.properties[8].value);
     });
   }
+  const allocation1 = await glm.payment.createAllocation({
+    budget: 45.0,
+    paymentPlatform: "erc20-holesky-tglm",
+    expirationSec: 3600
+  });
 
-  const order = {
+  const allocation2 = await glm.payment.createAllocation({
+    budget: 45.0,
+    paymentPlatform: "erc20-holesky-tglm",
+    expirationSec: 3600
+  });
+
+  const order1 = {
     demand: {
       workload: {
         imageTag: "golem/node:latest",
@@ -65,6 +76,9 @@ try {
         midAgreementDebitNoteIntervalSec: debitNoteInterval,
         midAgreementPaymentTimeoutSec: 1200,
       },
+    },
+    payment: {
+      allocation: allocation1,
     },
     market: {
       rentHours: 0.1,
@@ -78,9 +92,34 @@ try {
     },
     //network,
   };
-
-  const rental1 = await glm1.oneOf({ order });
-  const rental2 = await glm2.oneOf({ order });
+  const order2 = {
+    demand: {
+      workload: {
+        imageTag: "golem/node:latest",
+      },
+      payment: {
+        debitNotesAcceptanceTimeoutSec: debitNoteTimeout,
+        midAgreementDebitNoteIntervalSec: debitNoteInterval,
+        midAgreementPaymentTimeoutSec: 1200,
+      },
+    },
+    payment: {
+      allocation: allocation2,
+    },
+    market: {
+      rentHours: 0.1,
+      pricing: {
+        model: "linear",
+        maxStartPrice: 2.0,
+        maxCpuPerHourPrice: 3000.0,
+        maxEnvPerHourPrice: 3000.0,
+      },
+      offerProposalFilter: myProposalFilter,
+    },
+    //network,
+  };
+  const rental1 = await glm1.oneOf({ order1 });
+  const rental2 = await glm2.oneOf({ order2 });
 
   const exe1 = await rental1.getExeUnit();
   const exe2 = await rental2.getExeUnit();
