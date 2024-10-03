@@ -228,6 +228,7 @@ jobs:
 
           # append provider files
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            tar -rf data_${{ matrix.id }}.tar golem/provider_$i/yagnadir
             tar -rf data_${{ matrix.id }}.tar golem/provider_$i/providerdir
           done
           
