@@ -67,12 +67,12 @@ try {
       },
     },
     market: {
-      rentHours: 0.5,
+      rentHours: 0.1,
       pricing: {
         model: "linear",
         maxStartPrice: 2.0,
-        maxCpuPerHourPrice: 2.0,
-        maxEnvPerHourPrice: 2.0,
+        maxCpuPerHourPrice: 3000.0,
+        maxEnvPerHourPrice: 3000.0,
       },
       offerProposalFilter: myProposalFilter,
     },
