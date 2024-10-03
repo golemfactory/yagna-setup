@@ -250,7 +250,7 @@ jobs:
           done
           
           # append reports
-          tar -rf data_${{ matrix.id }}.tar reports/*.log
+          tar -rf data_${{ matrix.id }}.tar reports/*.log || true
           
           xz data_${{ matrix.id }}.tar
 
