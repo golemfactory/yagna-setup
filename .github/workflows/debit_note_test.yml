@@ -17,6 +17,7 @@ jobs:
             one_account: false
             interval: 2m
             id: 0
+            number_of_providers: 2
 
           - restart: false
             one_account: true
@@ -45,7 +46,7 @@ jobs:
 
       - name: Prepare runtime
         run: |
-          python advanced/prepare_runtime.py --mode central --payments full
+          python advanced/prepare_runtime.py --mode central --payments full --num-providers ${{ matrix.number_of_providers }}
 
       - name: Download private key
         run: |
@@ -90,29 +91,33 @@ jobs:
           yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
           yagna payment process info --account $YAGNA_ACCOUNT_0
 
-      - name: Prepare provider
+      - name: Prepare providers
         run: |
-          cd golem/provider_0
-          cat .env
-          golemsp setup --no-interactive
-          echo "\n***** Presets before change: *****\n"
-          ya-provider preset list
-          ya-provider preset update --no-interactive --name=vm --price="cpu=0.016" --price="duration=0.511"
-          echo "\n***** Presets after change: *****\n"
-          ya-provider preset list
-
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            cd golem/provider_$i
+            cat .env
+            golemsp setup --no-interactive
+            echo "\n***** Provider $i - Presets before change: *****\n"
+            ya-provider preset list
+            ya-provider preset update --no-interactive --name=vm --price="cpu=0.016" --price="duration=0.511"
+            echo "\n***** Provider $i - Presets after change: *****\n"
+            ya-provider preset list
+            cd ../..
+          done
       - name: Run provider
         run: |
           sudo chown $USER /dev/kvm 
-          cd golem/provider_0
-          cat .env
-          golemsp setup --no-interactive
-          yagna service run&
-          sleep 6
-          ya-provider run&
-          sleep 4
-          env > yagnadir/env.log
-          env > providerdir/env.log
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            cd golem/provider_$i
+            cat .env
+            golemsp setup --no-interactive
+            yagna service run&
+            sleep 6
+            ya-provider run&
+            sleep 4
+            env > yagnadir/env.log
+            cd ../..
+          done
         env:
           YA_CONSENT_EXTERNAL: "allow"
 
@@ -137,11 +142,14 @@ jobs:
           cd golem/requestor
           yagna service shutdown
 
-      - name: Stop provider
+      - name: Stop providers
         if: always()
         run: |
-          cd golem/provider_0
-          yagna service shutdown
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            cd golem/provider_$i
+            yagna service shutdown
+            cd ../..
+          done
           sleep 5
 
       - name: Requestor order items
@@ -165,12 +173,12 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider activities and agreements
+      - name: Providers activities and agreements
         run: |
           cd reports
-          node list_activities.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_activities.js
+          done
 
       - name: Requestor payments
         run: |
@@ -179,12 +187,12 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider payments
+      - name: Providers payments
         run: |
           cd reports
-          node list_payments.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_payments.js
+          done
 
       - name: Requestor debit notes
         run: |
@@ -193,12 +201,12 @@ jobs:
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
 
-      - name: Provider debit notes
+      - name: Providers debit notes
         run: |
           cd reports
-          node list_debit_notes.js
-        env:
-          YAGNA_DATADIR: ../golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_debit_notes.js
+          done
 
       - name: Requestor allocation expenditures
         run: |
@@ -211,18 +219,24 @@ jobs:
         if: always()
         run: |
           # remove image cache from upload
-          rm -r golem/provider_0/providerdir/exe-unit/cache
-          tar --zstd -cf data_${{ matrix.id }}.tar.zst \
-              golem/requestor/yagnadir \
-              golem/provider_0/providerdir \
-              golem/provider_0/yagnadir
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            rm -r golem/provider_$i/providerdir/exe-unit/cache
+          done  
+          tar -cf data_${{ matrix.id }}.tar golem/requestor/yagnadir
+
+          # append provider files
+          for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
+            tar -rf data_${{ matrix.id }}.tar golem/provider_$i/providerdir
+          done
+          
+          xz data_${{ matrix.id }}.tar
 
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: data_${{ matrix.id }}.tar.zst
-          path: data_${{ matrix.id }}.tar.zst
+          name: data_${{ matrix.id }}.tar.xz
+          path: data_${{ matrix.id }}.tar.xz
 
       - name: Upload used private key back to the server
         if: always()
