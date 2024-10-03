@@ -54,19 +54,7 @@ try {
       console.log(event[0].demand.details.prototype.properties[8].value);
     });
   }
-  const allocation1 = await glm1.payment.createAllocation({
-    budget: 45.0,
-    paymentPlatform: "erc20-holesky-tglm",
-    expirationSec: 3600
-  });
-
-  const allocation2 = await glm2.payment.createAllocation({
-    budget: 45.0,
-    paymentPlatform: "erc20-holesky-tglm",
-    expirationSec: 3600
-  });
-
-  const order1 = {
+  const order = {
     demand: {
       workload: {
         imageTag: "golem/node:latest",
@@ -77,53 +65,25 @@ try {
         midAgreementPaymentTimeoutSec: 1200,
       },
     },
-    payment: {
-      allocation: allocation1,
-    },
     market: {
       rentHours: 0.1,
       pricing: {
         model: "linear",
         maxStartPrice: 2.0,
-        maxCpuPerHourPrice: 3000.0,
-        maxEnvPerHourPrice: 3000.0,
+        maxCpuPerHourPrice: 10.0,
+        maxEnvPerHourPrice: 20.0,
       },
       offerProposalFilter: myProposalFilter,
     },
     //network,
   };
-  const order2 = {
-    demand: {
-      workload: {
-        imageTag: "golem/node:latest",
-      },
-      payment: {
-        debitNotesAcceptanceTimeoutSec: debitNoteTimeout,
-        midAgreementDebitNoteIntervalSec: debitNoteInterval,
-        midAgreementPaymentTimeoutSec: 1200,
-      },
-    },
-    payment: {
-      allocation: allocation2,
-    },
-    market: {
-      rentHours: 0.1,
-      pricing: {
-        model: "linear",
-        maxStartPrice: 2.0,
-        maxCpuPerHourPrice: 3000.0,
-        maxEnvPerHourPrice: 3000.0,
-      },
-      offerProposalFilter: myProposalFilter,
-    },
-    //network,
-  };
-  const rental1 = await glm1.oneOf({ order1 });
-  const rental2 = await glm2.oneOf({ order2 });
+
+  const rental1 = await glm1.oneOf({ order });
+  const rental2 = await glm2.oneOf({ order });
 
   const exe1 = await rental1.getExeUnit();
   const exe2 = await rental2.getExeUnit();
-  console.log("pomidor");
+
   console.log((await exe1.run(`echo ${exe1.provider.id}`)).stdout);
   console.log((await exe2.run(`echo ${exe2.provider.id}`)).stdout);
 
