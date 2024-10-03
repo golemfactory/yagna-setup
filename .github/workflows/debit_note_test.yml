@@ -98,6 +98,8 @@ jobs:
           golemsp setup --no-interactive
           yagna service run&
           sleep 6
+          ya-provider preset list
+          ya-provider preset update --no-interactive --name vm --price cpu=1.3 --price duration=0.4
           ya-provider run&
           sleep 4
           env > yagnadir/env.log
