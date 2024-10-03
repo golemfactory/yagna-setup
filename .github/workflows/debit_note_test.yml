@@ -176,37 +176,37 @@ jobs:
         run: |
           cd reports
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
-            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_activities.js
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_activities.js | tee provider_${i}_activities.log
           done
 
       - name: Requestor payments
         run: |
           cd reports
-          YAGNA_DATADIR=../golem/requestor/yagnadir node list_payments.js
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_payments.js | tee requestor_payments.log
 
       - name: Providers payments
         run: |
           cd reports
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
-            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_payments.js
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_payments.js | tee provider_${i}_payments.log
           done
 
       - name: Requestor debit notes
         run: |
           cd reports
-          YAGNA_DATADIR=../golem/requestor/yagnadir node list_debit_notes.js
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_debit_notes.js | tee requestor_debit_notes.log
 
       - name: Providers debit notes
         run: |
           cd reports
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
-            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_debit_notes.js
+            YAGNA_DATADIR=../golem/provider_$i/yagnadir node list_debit_notes.js | tee provider_${i}_debit_notes.log
           done
 
       - name: Requestor allocation expenditures
         run: |
           cd reports
-          YAGNA_DATADIR=../golem/requestor/yagnadir node list_expenditures.js
+          YAGNA_DATADIR=../golem/requestor/yagnadir node list_expenditures.js | tee requestor_expenditures.log
 
 #### Prepare logs by removing binary images and pack all logs and db together
 
@@ -224,6 +224,9 @@ jobs:
             tar -rf data_${{ matrix.id }}.tar golem/provider_$i/yagnadir
             tar -rf data_${{ matrix.id }}.tar golem/provider_$i/providerdir
           done
+          
+          # append reports
+          tar -rf data_${{ matrix.id }}.tar reports/*.log
           
           xz data_${{ matrix.id }}.tar
           mv data_${{ matrix.id }}.tar.xz data_${{ matrix.id }}.tar.xz
