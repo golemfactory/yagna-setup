@@ -1,0 +1,19 @@
+{
+    "name": "debitnotetest",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo Error: no test specified && exit 1",
+        "run": "node index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@golem-sdk/golem-js": "^3.2.0",
+        "@golem-sdk/pino-logger": "^1.1",
+        "dotenv": "^16.4.5"
+    }
+}
