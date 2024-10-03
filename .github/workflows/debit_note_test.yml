@@ -95,9 +95,10 @@ jobs:
           cd golem/provider_0
           cat .env
           golemsp setup --no-interactive
+          echo "\n***** Presets before change: *****\n"
           ya-provider preset list
           ya-provider preset update --no-interactive --name=vm --price="cpu=0.666" --price="duration=0.211"
-          echo "Presets after change:"
+          echo "\n***** Presets after change: *****\n"
           ya-provider preset list
 
       - name: Run provider
