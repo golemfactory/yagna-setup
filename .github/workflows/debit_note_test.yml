@@ -23,6 +23,7 @@ jobs:
             one_account: true
             interval: 1m
             id: 1
+            number_of_providers: 2
 
     timeout-minutes: 20
     runs-on: ubuntu-latest
