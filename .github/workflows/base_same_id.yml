@@ -1,7 +1,7 @@
 name: Base same keys
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "actions/base-same-id" ]
   pull_request:
     branches: [ "main" ]
 

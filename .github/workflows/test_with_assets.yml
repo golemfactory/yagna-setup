@@ -1,7 +1,7 @@
 name: Test with assets
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "actions/test-with-assets" ]
   pull_request:
     branches: [ "main" ]
 
