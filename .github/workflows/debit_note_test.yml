@@ -104,7 +104,8 @@ jobs:
             ya-provider preset list
             cd ../..
           done
-      - name: Run provider
+
+      - name: Run providers
         run: |
           sudo chown $USER /dev/kvm 
           for i in $(seq 0 $((${{ matrix.number_of_providers }} - 1))); do
