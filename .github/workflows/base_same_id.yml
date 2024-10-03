@@ -1,12 +1,14 @@
-name: Multi allocations
+name: Base same keys
 on:
   push:
-    branches: [ "main", "actions/multi-allocations" ]
+    branches: [ "main", "actions/base-same-id" ]
   pull_request:
     branches: [ "main" ]
 
+
 jobs:
-  multi-allocations:
+  run_test:
+    name: Base same id
     strategy:
       fail-fast: false
       matrix:
@@ -15,36 +17,24 @@ jobs:
             one_account: true
             interval: 1m
             id: 0
-            number_of_providers: 1
+            number_of_providers: 2
 
           - restart: true
             one_account: false
             interval: 2m
             id: 1
-            number_of_providers: 1
+            number_of_providers: 2
 
           - restart: false
             one_account: true
             interval: 5m
             id: 2
-            number_of_providers: 1
-
-          - restart: false
-            one_account: true
-            interval: 10m
-            id: 3
-            number_of_providers: 1
-
-          - restart: false
-            one_account: true
-            interval: 1m
-            id: 4
             number_of_providers: 2
 
           - restart: false
             one_account: true
             interval: 10m
-            id: 5
+            id: 3
             number_of_providers: 2
 
     timeout-minutes: 20
@@ -78,7 +68,8 @@ jobs:
           python advanced/prepare_runtime.py --mode central --payments full --num-providers ${{ matrix.number_of_providers }}
 
 #### Get funding by downloading private keys with assets ready to use
-      - name: Download private key 0
+
+      - name: Download private key
         run: |
           set -x
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/unused_accounts > downloaded_private_key_0.key
@@ -86,13 +77,7 @@ jobs:
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
 
-      - name: Download private key 1
-        run: |
-          set -x
-          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/unused_accounts > downloaded_private_key_1.key
-          echo "Keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
-          # Check if the downloaded key is a valid private key
-          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_1.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_1.key)"; exit 1; }
+#### Provisioning requestor
 
       - name: Run requestor second account
         if: matrix.one_account != true
@@ -139,7 +124,7 @@ jobs:
             golemsp setup --no-interactive
             echo "\n***** Provider $i - Presets before change: *****\n"
             ya-provider preset list
-            ya-provider preset update --no-interactive --name=vm --price="cpu=0.0016" --price="duration=0.2311"
+            ya-provider preset update --no-interactive --name=vm --price="cpu=0.0016" --price="duration=0.12"
             echo "\n***** Provider $i - Presets after change: *****\n"
             ya-provider preset list
             cd ../..
@@ -162,14 +147,13 @@ jobs:
         env:
           YA_CONSENT_EXTERNAL: "allow"
 
-      - name: Run allocation double activity sample
+      - name: Run base same id test
         run: |
-          cd examples/multi-allocation-double-activity
-          echo "FUNDER_PRIVATE_KEY=0x$(cat ../../downloaded_private_key_1.key)" >> .env
-          echo "SPENDER_ADDRESS=$YAGNA_ACCOUNT_0" >> .env
+          cd examples/base-same-id
           npm install --silent
-          node index.mjs
+          node base_sameID.js
 
+#### Wait for payments to be finished
       - name: Wait for payments
         run: |
           cd reports
@@ -290,5 +274,3 @@ jobs:
         run: |
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
           curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $(cat downloaded_private_key_0.key) https://polygongas.org/keys/add/used_accounts
-          grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_1.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
-          curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" -d $(cat downloaded_private_key_1.key) https://polygongas.org/keys/add/used_accounts
