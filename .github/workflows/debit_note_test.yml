@@ -156,7 +156,7 @@ jobs:
           done
           sleep 5
 
-      # *** Report analysis of entities ***
+#### Report analysis of entities
 
       - name: Requestor order items
         run: |
@@ -208,7 +208,7 @@ jobs:
           cd reports
           YAGNA_DATADIR=../golem/requestor/yagnadir node list_expenditures.js
 
-      # *** Prepare logs by removing binary images and pack all logs and db together ***
+#### Prepare logs by removing binary images and pack all logs and db together
 
       - name: Prepare logs
         if: always()
@@ -228,7 +228,7 @@ jobs:
           xz data_${{ matrix.id }}.tar
           mv data_${{ matrix.id }}.tar.xz data_${{ matrix.id }}.tar.xz
 
-      # *** Upload logs ***
+#### Upload logs
 
       - name: Upload logs - Set current date
         if: always()
@@ -241,7 +241,7 @@ jobs:
           name: data_${{ matrix.id }}_${{env.CURRENT_DATE_FOR_UPLOAD}}.tar.xz
           path: data_${{ matrix.id }}.tar.xz
 
-      # *** Upload used private key back to the server ***
+#### Upload used private key back to the server
 
       - name: Upload used private key back to the server
         if: always()
