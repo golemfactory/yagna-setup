@@ -42,14 +42,20 @@ jobs:
           sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
           sudo mv golem/downloaded/* /usr/bin/ 
 
+#### Central net router is responsible for local communication of the nodes
+
       - name: Run central-net router
         run: |
           ya-sb-router -l tcp://127.0.0.1:5555&
           echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
 
+#### Script for preparing runtime (basic preparation)
+
       - name: Prepare runtime
         run: |
           python advanced/prepare_runtime.py --mode central --payments full --num-providers ${{ matrix.number_of_providers }}
+
+#### Get funding by downloading private keys with assets ready to use
 
       - name: Download private key
         run: |
@@ -58,6 +64,8 @@ jobs:
           echo "Keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
           # Check if the downloaded key is a valid private key
           grep -qE '^[a-fA-F0-9]{64}$' downloaded_private_key_0.key || { echo "Error: File contents do not match expected format: $(cat downloaded_private_key_0.key)"; exit 1; }
+
+#### Provisioning requestor
 
       - name: Run requestor second account
         if: matrix.one_account != true
@@ -93,6 +101,8 @@ jobs:
           cd golem/requestor
           yagna payment process set --account $YAGNA_ACCOUNT_0 --interval ${{ matrix.interval }}
           yagna payment process info --account $YAGNA_ACCOUNT_0
+
+#### Provisioning providers
 
       - name: Prepare providers
         run: |
@@ -132,6 +142,8 @@ jobs:
           npm install --silent
           npm run run&
 
+#### Wait for payments to be finished
+
       - name: Wait for payments
         run: |
           cd reports
@@ -139,6 +151,8 @@ jobs:
           node wait_for_payments.js
         env:
           YAGNA_DATADIR: ../golem/requestor/yagnadir
+
+#### Stop services
 
       - name: Stop requestor
         if: always()
@@ -229,13 +243,12 @@ jobs:
           tar -rf data_${{ matrix.id }}.tar reports/*.log
           
           xz data_${{ matrix.id }}.tar
-          mv data_${{ matrix.id }}.tar.xz data_${{ matrix.id }}.tar.xz
 
 #### Upload logs
 
       - name: Upload logs - Set current date
         if: always()
-        run: echo "CURRENT_DATE_FOR_UPLOAD=$(cat date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+        run: echo "CURRENT_DATE_FOR_UPLOAD=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
 
       - name: Upload logs
         if: always()
