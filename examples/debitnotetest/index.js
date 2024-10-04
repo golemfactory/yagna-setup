@@ -88,8 +88,8 @@ async function connectAndRun(glm) {
             pricing: {
                 model: "linear",
                 maxStartPrice: 0.5,
-                maxCpuPerHourPrice: 3000.0,
-                maxEnvPerHourPrice: 3000.0,
+                maxCpuPerHourPrice: 100000.0,
+                maxEnvPerHourPrice: 100000.0,
             },
             offerProposalFilter: myProposalFilter,
         },
