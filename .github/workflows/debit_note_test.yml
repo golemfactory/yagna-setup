@@ -140,7 +140,7 @@ jobs:
           cd examples/debitnotetest
           echo "EXAMPLE_STEPS=2" >> .env
           npm install --silent
-          npm run run&
+          npm run run
 
 #### Wait for payments to be finished
 
