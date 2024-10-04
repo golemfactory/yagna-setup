@@ -73,10 +73,12 @@ async function runOperator(observerContext, depositsData) {
         },
       },
       market: {
-        rentHours: 0.5,
+        rentHours: 0.1,
         pricing: {
-          model: "burn-rate",
-          avgGlmPerHour: 0.5,
+          model: "linear",
+          maxStartPrice: 0.5,
+          maxCpuPerHourPrice: 3000.0,
+          maxEnvPerHourPrice: 3000.0,
         },
       },
       payment: {

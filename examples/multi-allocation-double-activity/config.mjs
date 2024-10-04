@@ -19,7 +19,7 @@ const config = {
     holeskyAddress: "0x8888888815bf4DB87e57B609A50f938311EEd068",
   },
   budget: {
-    amount: 1.0,
+    amount: 23.0,
     flatFeeAmount: 1.0,
     numberOfDeposits: 2,
   },
