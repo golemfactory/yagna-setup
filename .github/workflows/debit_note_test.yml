@@ -1,4 +1,4 @@
-name: Test with assets
+name: Debit note test
 on:
   push:
     branches: [ "main", "actions/test-with-assets" ]
