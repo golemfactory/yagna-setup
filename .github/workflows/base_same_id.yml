@@ -139,6 +139,8 @@ jobs:
             golemsp setup --no-interactive
             yagna service run&
             sleep 6
+            yagna market golem-base fund
+            sleep 1
             ya-provider run&
             sleep 4
             env > yagnadir/env.log
