@@ -1,7 +1,7 @@
 set -x
 mkdir -p golem/downloaded
 cd golem/downloaded
-YAGNA_TAG=pre-rel-v0.17.0-payments-beta10
+YAGNA_TAG=pre-rel-v0.17.1-preview.golembase.7
 wget -qO- https://github.com/golemfactory/yagna/releases/download/${YAGNA_TAG}/golem-provider-linux-${YAGNA_TAG}.tar.gz | tar -xvz
 wget -qO- https://github.com/golemfactory/yagna/releases/download/${YAGNA_TAG}/golem-requestor-linux-${YAGNA_TAG}.tar.gz | tar -xvz
 
