@@ -11,7 +11,6 @@ Install docker - make sure to have user access to docker (add user to docker gro
 For example here:
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
 
-
 Install rust
 ```bash
 curl https://sh.rustup.rs -sSf | sh
