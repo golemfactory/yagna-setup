@@ -2,7 +2,7 @@ import { readJsonFile } from "./utils.js";
 import { Address, createPublicClient, decodeFunctionData, Hex, http, parseAbi, WatchEventReturnType } from "viem";
 import chalk from "chalk";
 import config from "./config.js";
-import { holesky } from "viem/chains";
+import { hoodi } from "viem/chains";
 
 export interface ObserveTransactionsContext {
     observedAddress: Address;
@@ -14,7 +14,7 @@ export interface ObserveTransactionsContext {
 const abiLock = await readJsonFile("./contracts/lockAbi.json");
 // publicClient for readContract functions
 const publicClient = createPublicClient({
-    chain: holesky,
+    chain: hoodi,
     transport: http(config.rpcUrl),
 });
 
@@ -99,7 +99,7 @@ export function observeTransactionEvents(context: ObserveTransactionsContext): P
 
 export async function spawnContractObserver() {
     const context = {
-        observedAddress: <Address>config.lockPaymentContract.holeskyAddress,
+        observedAddress: <Address>config.lockPaymentContract.hoodiAddress,
         funderAddress: <Address>config.funder.address,
         spenderAddress: null,
         unwatch: () => {

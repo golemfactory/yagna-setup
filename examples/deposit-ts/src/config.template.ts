@@ -10,12 +10,12 @@ const config = {
     spender: {
         address: "0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF",
     },
-    rpcUrl: "https://holesky.rpc-node.dev.golem.network",
+    rpcUrl: "https://hoodi.rpc-node.dev.golem.network",
     lockPaymentContract: {
-        holeskyAddress: "0x63704675f72A47a7a183112700Cb48d4B0A94332",
+        hoodiAddress: "0x472ef33B51f65FB2aDa50ffeB0e4A72e9ac22f52",
     },
     glmContract: {
-        holeskyAddress: "0x8888888815bf4DB87e57B609A50f938311EEd068",
+        hoodiAddress: "0x55555555555556AcFf9C332Ed151758858bd7a26",
     },
     budget: {
         amount: 1.0,

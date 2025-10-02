@@ -153,7 +153,7 @@ Run:
 
 Note: for older yagna, before running ya-provider you need to initialize the payment driver:
 
-yagna payment init --receiver --network holesky
+yagna payment init --receiver --network hoodi
 
 Run:
 ya-provider run
@@ -221,7 +221,7 @@ YA_CONSENT_EXTERNAL=allow
 # provider name
 NODE_NAME=myprovider
 
-YA_PAYMENT_NETWORK=holesky
+YA_PAYMENT_NETWORK=hoodi
 
 DISABLE_AUTO_CLEANUP=true
 

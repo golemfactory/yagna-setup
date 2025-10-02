@@ -2,7 +2,7 @@
 
 import { Address, createPublicClient, createWalletClient, formatEther, Hex, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { holesky } from "viem/chains";
+import { hoodi } from "viem/chains";
 import chalk from "chalk";
 const abiGlm = await readJsonFile("./contracts/glmAbi.json");
 const abiLock = await readJsonFile("./contracts/lockAbi.json");
@@ -16,22 +16,22 @@ const budget = config.budget;
 // walletClient for writeContract functions
 const walletClient = createWalletClient({
     account: funderAccount,
-    chain: holesky,
+    chain: hoodi,
     transport: http(config.rpcUrl),
 });
 
 // publicClient for readContract functions
 const publicClient = createPublicClient({
-    chain: holesky,
+    chain: hoodi,
     transport: http(config.rpcUrl),
 });
 
 const LOCK_CONTRACT = {
-    address: config.lockPaymentContract.holeskyAddress,
+    address: config.lockPaymentContract.hoodiAddress,
     abi: abiLock,
 };
 const GLM_CONTRACT = {
-    address: config.glmContract.holeskyAddress,
+    address: config.glmContract.hoodiAddress,
     abi: abiGlm,
 };
 

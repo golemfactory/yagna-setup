@@ -68,7 +68,7 @@ async function connectAndRun(glm) {
 
     const allocation = await glm.payment.createAllocation({
         budget: 80.0,
-        paymentPlatform: "erc20-holesky-tglm",
+        paymentPlatform: "erc20-hoodi-tglm",
         expirationSec: 3600
     });
 

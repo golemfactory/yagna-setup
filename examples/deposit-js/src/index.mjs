@@ -27,7 +27,7 @@ async function runOperator(observerContext) {
         await glm.connect();
 
         const deposit = {
-            contract: config.lockPaymentContract.holeskyAddress,
+            contract: config.lockPaymentContract.hoodiAddress,
             id: BigInt(depositData.id).toString(16),
         };
 
@@ -35,7 +35,7 @@ async function runOperator(observerContext) {
             budget: depositData.amount,
             deposit: deposit,
             expirationSec: 3600,
-            // paymentPlatform: 'erc20-holesky-tglm'  // used to create allocation without deposit
+            // paymentPlatform: 'erc20-hoodi-tglm'  // used to create allocation without deposit
         });
 
         observerContext.spenderAddress = allocation.address;

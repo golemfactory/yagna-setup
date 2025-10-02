@@ -134,7 +134,7 @@ program
     )
     .option(
         "--payment-network, --network <network>",
-        "network name, for example 'holesky'"
+        "network name, for example 'hoodi'"
     )
     .option("-t, --max-parallel-tasks <maxParallelTasks>", "max parallel tasks");
 program.parse();
