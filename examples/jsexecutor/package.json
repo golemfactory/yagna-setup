@@ -12,9 +12,9 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@golem-sdk/task-executor": "^1.3.0",
-        "commander": "^12.0.0",
-        "dotenv": "^16.4.5",
-        "url": "^0.11.3"
+        "@golem-sdk/task-executor": "^2.1.0",
+        "commander": "^14.0.1",
+        "dotenv": "^17.2.3",
+        "url": "^0.11.4"
     }
 }

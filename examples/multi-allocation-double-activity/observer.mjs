@@ -1,5 +1,5 @@
 import { createPublicClient, decodeFunctionData, http, parseAbi } from "viem";
-import { holesky } from "viem/chains";
+import { hoodi } from "viem/chains";
 import { readFileSync } from "fs";
 import config from "./config.mjs";
 import chalk from "chalk";
@@ -9,7 +9,7 @@ const abiLock = await JSON.parse(
 );
 // publicClient for readContract functions
 const publicClient = createPublicClient({
-  chain: holesky,
+  chain: hoodi,
   transport: http(config.rpcUrl),
 });
 
@@ -83,14 +83,14 @@ export function observeTransactionEvents(context) {
         "event DepositTerminated(uint256 indexed id, address spender)",
         "event DepositTransfer(uint256 indexed id, address spender, address recipient, uint128 amount)",
       ]),
-      address: config.lockPaymentContract.holeskyAddress,
+      address: config.lockPaymentContract.hoodiAddress,
     });
   });
 }
 
 export async function spawnContractObserver() {
   const context = {
-    observedAddress: config.lockPaymentContract.holeskyAddress,
+    observedAddress: config.lockPaymentContract.hoodiAddress,
     spenderAddress: null,
     unwatch: () => {
       throw new Error("Cannot call unwatch before watch");

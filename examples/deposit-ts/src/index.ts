@@ -10,7 +10,7 @@ import { ObserveTransactionsContext, spawnContractObserver } from "./observer.js
 
 /*
 const LOCK_CONTRACT = getContract({
-    address: <Address>config.lockPaymentContract.holeskyAddress,
+    address: <Address>config.lockPaymentContract.hoodiAddress,
     abi: abiLock,
     //@ts-expect-error I don't now how to satisfy this crazy types
     client: publicClient,
@@ -36,7 +36,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
         await glm.connect();
 
         const deposit = {
-            contract: config.lockPaymentContract.holeskyAddress,
+            contract: config.lockPaymentContract.hoodiAddress,
             id: BigInt(depositData.id).toString(16),
         };
 
@@ -44,7 +44,7 @@ async function runOperator(observerContext: ObserveTransactionsContext) {
             budget: depositData.amount,
             deposit: deposit,
             expirationSec: 3600,
-            // paymentPlatform: 'erc20-holesky-tglm'
+            // paymentPlatform: 'erc20-hoodi-tglm'
         });
 
         observerContext.spenderAddress = <Address>allocation.address;

@@ -48,7 +48,7 @@ async function runOperator(observerContext, depositsData) {
       // one using the requestor wallet and one based on the deposit
 
       const deposit = {
-        contract: config.lockPaymentContract.holeskyAddress,
+        contract: config.lockPaymentContract.hoodiAddress,
         id: BigInt(depositData.id).toString(16),
       };
 
@@ -61,7 +61,7 @@ async function runOperator(observerContext, depositsData) {
       const allocationW = await glm.payment.createAllocation({
         budget: depositData.amount, // allocation budget from wallet same as from a deposit
         expirationSec: 3600,
-        paymentPlatform: "erc20-holesky-tglm",
+        paymentPlatform: "erc20-hoodi-tglm",
       });
 
       allocations.push(allocationD);
