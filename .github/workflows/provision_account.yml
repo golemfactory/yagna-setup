@@ -36,7 +36,7 @@ jobs:
       - name: Prepare funding
         if: env.should_continue == 'true'
         run: |
-          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/pre-rel-v0.4.8-nightly/erc20_processor-linux-x86_64.tar.xz
+          wget https://github.com/golemfactory/erc20_payment_lib/releases/download/v0.5.1/erc20_processor-linux-x86_64.tar.xz
           tar -xf erc20_processor-linux-x86_64.tar.xz
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
