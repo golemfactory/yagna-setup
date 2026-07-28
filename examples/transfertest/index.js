@@ -40,7 +40,7 @@ async function main(subnetTag) {
 
     const executor = await TaskExecutor.create({
         subnetTag,
-        package: "golem/blender:latest",
+        package: "golem/alpine:latest",
         logger: pinoPrettyLogger(),
         yagnaOptions: { apiKey: appKey },
         payment: {
@@ -61,8 +61,8 @@ async function main(subnetTag) {
             const result = await ctx
                 .beginBatch()
                 .uploadFile(LOCAL_INPUT, "/golem/work/payload.txt")
-                .run("cp /golem/work/payload.txt /golem/output/payload.txt")
-                .downloadFile("/golem/output/payload.txt", LOCAL_OUTPUT)
+                .run("cp /golem/work/payload.txt /golem/work/payload.copy.txt")
+                .downloadFile("/golem/work/payload.copy.txt", LOCAL_OUTPUT)
                 .end();
 
             // Surface the copy command's exit status for debugging.
