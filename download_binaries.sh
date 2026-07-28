@@ -1,7 +1,13 @@
 set -x
 mkdir -p golem/downloaded
 cd golem/downloaded
-YAGNA_TAG=v0.17.6
+# Which yagna release to install. Defaults to the last stable release (unpatched,
+# used by the read/write path-traversal PoCs). Override via the environment to
+# test another build, e.g. a patched preview tag to confirm the fix:
+#   YAGNA_TAG=pre-rel-v0.17.6-preview.transfer.0 ./download_binaries.sh
+# The provider/requestor tarballs follow the same `golem-*-linux-${TAG}` naming
+# across stable and preview releases, so no other change is needed.
+YAGNA_TAG="${YAGNA_TAG:-v0.17.6}"
 wget -qO- https://github.com/golemfactory/yagna/releases/download/${YAGNA_TAG}/golem-provider-linux-${YAGNA_TAG}.tar.gz | tar -xvz
 wget -qO- https://github.com/golemfactory/yagna/releases/download/${YAGNA_TAG}/golem-requestor-linux-${YAGNA_TAG}.tar.gz | tar -xvz
 
