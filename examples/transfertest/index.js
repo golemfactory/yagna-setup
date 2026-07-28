@@ -43,6 +43,10 @@ async function main(subnetTag) {
         package: "golem/blender:latest",
         logger: pinoPrettyLogger(),
         yagnaOptions: { apiKey: appKey },
+        payment: {
+            driver: "erc20",
+            network: process.env.YA_PAYMENT_NETWORK || "hoodi",
+        },
         activityExeBatchResultPollIntervalSeconds: 5,
         taskTimeout: 1000 * 60 * 10,
         expirationSec: 60 * 30,

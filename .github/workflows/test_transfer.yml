@@ -9,11 +9,14 @@ on:
         default: 'Not used'
 
 jobs:
-  test:
+  run_test:
+    name: Test transfer
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+#### prepare binaries
 
       - name: Download and install binaries
         run: |
@@ -25,58 +28,84 @@ jobs:
           sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
           sudo mv golem/downloaded/* /usr/bin/
 
-      - name: Test binaries
+#### Central net router is responsible for local communication of the nodes
+
+      - name: Run central-net router
         run: |
-          yagna --version
-          ya-provider --version
-          ya-provider exe-unit list --json
-        env:
-          YA_CONSENT_INTERNAL: "allow"
-          YA_CONSENT_EXTERNAL: "allow"
+          ya-sb-router -l tcp://127.0.0.1:5555&
+          echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
+
+#### Generate requestor/provider runtime directories
 
       - name: Prepare runtime
         run: |
-          /bin/bash prepare_runtime.sh
+          python advanced/prepare_runtime.py --mode central --num-providers 1
 
-      - name: Run router
+#### No real funds: the erc20 driver is told to skip allocation validation
+#### (YAGNA_DEV_SKIP_ALLOCATION_VALIDATION), so allocations validate as funded.
+
+      - name: Configure requestor without funding
         run: |
-          ya-sb-router -l tcp://0.0.0.0:5555&
-          sleep 1
+          cd golem/requestor
+          {
+            echo "YAGNA_AUTOCONF_APPKEY=66iiOdkvV29"
+            echo "YAGNA_APPKEY=66iiOdkvV29"
+            echo "YA_PAYMENT_NETWORK=hoodi"
+            echo "YAGNA_DEV_SKIP_ALLOCATION_VALIDATION=1"
+          } >> .env
+          echo "----- requestor .env -----"
+          cat .env
 
       - name: Run requestor
         run: |
           cd golem/requestor
-          cat .env
           yagna service run&
+          sleep 6
+          yagna app-key list
+
+#### Provisioning provider (presets + pricing), mirroring the debit note test
+
+      - name: Prepare provider
+        run: |
+          cd golem/provider_0
+          # faster offer propagation on a cold local net
+          echo "MEAN_CYCLIC_BCAST_INTERVAL=10sec" >> .env
+          cat .env
+          golemsp setup --no-interactive
+          ya-provider preset list
+          ya-provider preset update --no-interactive --name=vm --price="cpu=0.016" --price="duration=1.111"
+          ya-provider preset list
+        env:
+          YA_CONSENT_EXTERNAL: "allow"
 
       - name: Run provider
         run: |
           sudo chown $USER /dev/kvm
           cd golem/provider_0
-          cat .env
           golemsp setup --no-interactive
           yagna service run&
-          sleep 10
+          sleep 8
           ya-provider run&
           # give the provider time to subscribe and broadcast its offer
           # before the requestor starts looking for it
           sleep 30
+          env > yagnadir/env.log
         env:
-          YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
 
-      - name: Requestor app-key list
-        run: |
-          cd golem/requestor
-          yagna app-key list
+#### Run the actual transfer round-trip test
 
       - name: Run transfer round-trip test
         run: |
           cd examples/transfertest
-          npm install
+          echo "YAGNA_SUBNET=public" > .env
+          npm install --silent
           npm test
         env:
           YAGNA_APPKEY: 66iiOdkvV29
+          YA_PAYMENT_NETWORK: hoodi
+
+#### Stop services
 
       - name: Stop requestor
         if: always()
@@ -89,6 +118,8 @@ jobs:
         run: |
           cd golem/provider_0
           yagna service shutdown || true
+
+#### Pack and upload logs
 
       - name: Prepare logs
         if: always()
