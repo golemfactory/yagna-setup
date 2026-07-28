@@ -40,7 +40,12 @@ async function main(subnetTag) {
 
     const executor = await TaskExecutor.create({
         subnetTag,
-        package: "golem/alpine:latest",
+        // Custom Alpine image (built from image/Dockerfile) that declares the
+        // /golem/work, /golem/input, /golem/output, /golem/resource volumes.
+        // Pinned by registry hash; override with IMAGE_HASH if rebuilt.
+        package:
+            process.env.IMAGE_HASH ||
+            "1cb8a95736cd4417bfe68e8d48849cf1341641c24dbd1d2b9823e8f9",
         logger: pinoPrettyLogger(),
         yagnaOptions: { apiKey: appKey },
         payment: {

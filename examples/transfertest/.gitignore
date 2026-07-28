@@ -1,3 +1,7 @@
 node_modules/
 payload.txt
 payload.roundtrip.txt
+
+# built gvmi artifacts (image is pushed to the registry)
+image/*.gvmi
+image/*.descr.bin
