@@ -56,9 +56,11 @@ jobs:
           cat .env
           golemsp setup --no-interactive
           yagna service run&
-          sleep 6
+          sleep 10
           ya-provider run&
-          sleep 4
+          # give the provider time to subscribe and broadcast its offer
+          # before the requestor starts looking for it
+          sleep 30
         env:
           YA_CONSENT_INTERNAL: "allow"
           YA_CONSENT_EXTERNAL: "allow"
