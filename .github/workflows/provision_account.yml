@@ -1,5 +1,9 @@
 name: Provision account
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       empty:

@@ -1,5 +1,9 @@
 name: Base same keys
 on:
+  push:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       empty:
