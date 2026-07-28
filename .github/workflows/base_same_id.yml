@@ -6,6 +6,13 @@ on:
     branches: [ "main" ]
 
 
+  workflow_dispatch:
+    inputs:
+      empty:
+        description: 'Empty option'
+        required: false
+        default: 'Not used'
+
 jobs:
   run_test:
     name: Base same id

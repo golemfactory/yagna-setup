@@ -1,0 +1,105 @@
+name: Test transfer
+
+on:
+  workflow_dispatch:
+    inputs:
+      empty:
+        description: 'Empty option'
+        required: false
+        default: 'Not used'
+
+jobs:
+  test:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and install binaries
+        run: |
+          /bin/bash download_binaries.sh
+
+      - name: Install binaries
+        run: |
+          sudo mkdir -p /usr/lib/yagna
+          sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
+          sudo mv golem/downloaded/* /usr/bin/
+
+      - name: Test binaries
+        run: |
+          yagna --version
+          ya-provider --version
+          ya-provider exe-unit list --json
+        env:
+          YA_CONSENT_INTERNAL: "allow"
+          YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Prepare runtime
+        run: |
+          /bin/bash prepare_runtime.sh
+
+      - name: Run router
+        run: |
+          ya-sb-router -l tcp://0.0.0.0:5555&
+          sleep 1
+
+      - name: Run requestor
+        run: |
+          cd golem/requestor
+          cat .env
+          yagna service run&
+
+      - name: Run provider
+        run: |
+          sudo chown $USER /dev/kvm
+          cd golem/provider_0
+          cat .env
+          golemsp setup --no-interactive
+          yagna service run&
+          sleep 6
+          ya-provider run&
+          sleep 4
+        env:
+          YA_CONSENT_INTERNAL: "allow"
+          YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Requestor app-key list
+        run: |
+          cd golem/requestor
+          yagna app-key list
+
+      - name: Run transfer round-trip test
+        run: |
+          cd examples/transfertest
+          npm install
+          npm test
+        env:
+          YAGNA_APPKEY: 66iiOdkvV29
+
+      - name: Stop requestor
+        if: always()
+        run: |
+          cd golem/requestor
+          yagna service shutdown || true
+
+      - name: Stop provider
+        if: always()
+        run: |
+          cd golem/provider_0
+          yagna service shutdown || true
+
+      - name: Prepare logs
+        if: always()
+        run: |
+          rm -rf golem/provider_0/providerdir/exe-unit/cache
+          tar --zstd -cf transfer_logs.tar.zst \
+            golem/requestor/yagnadir \
+            golem/provider_0/providerdir \
+            golem/provider_0/yagnadir || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: transfer_logs.tar.zst
+          path: transfer_logs.tar.zst

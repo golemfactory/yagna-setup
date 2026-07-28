@@ -5,6 +5,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+  workflow_dispatch:
+    inputs:
+      empty:
+        description: 'Empty option'
+        required: false
+        default: 'Not used'
+
 jobs:
   multi-allocations:
     strategy:
