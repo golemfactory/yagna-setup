@@ -1,11 +1,5 @@
 name: Debit note test
 on:
-  push:
-    branches: [ "main", "actions/test-with-assets" ]
-  pull_request:
-    branches: [ "main" ]
-
-
   workflow_dispatch:
     inputs:
       empty:

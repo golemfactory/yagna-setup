@@ -1,10 +1,5 @@
 name: Multi allocations
 on:
-  push:
-    branches: [ "main", "actions/multi-allocations" ]
-  pull_request:
-    branches: [ "main" ]
-
   workflow_dispatch:
     inputs:
       empty:

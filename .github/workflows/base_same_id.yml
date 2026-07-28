@@ -1,11 +1,5 @@
 name: Base same keys
 on:
-  push:
-    branches: [ "main", "actions/base-same-id" ]
-  pull_request:
-    branches: [ "main" ]
-
-
   workflow_dispatch:
     inputs:
       empty:
