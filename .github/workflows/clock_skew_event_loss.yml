@@ -1,0 +1,49 @@
+name: Clock-skew event loss
+
+# Regression test for https://github.com/golemfactory/yagna/pull/3569.
+# Runs against the standard yagna release pinned in download_binaries.sh.
+# EXPECTED TO FAIL (red) until that release contains the fix - the red job
+# is the point: it tracks the bug until a fixed yagna is pinned.
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      empty:
+        description: 'Empty option'
+        required: false
+        default: 'Not used'
+
+jobs:
+  run_test:
+    name: Clock-skew event loss
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and install binaries
+        run: |
+          /bin/bash download_binaries.sh
+
+      - name: Allow KVM access
+        run: |
+          sudo chown $USER /dev/kvm
+
+      - name: Run clock-skew event-loss test
+        run: |
+          cd examples/clock-skew-event-loss
+          ./run_test.sh
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clock-skew-run-logs
+          path: |
+            examples/clock-skew-event-loss/run/**/*.log
+            examples/clock-skew-event-loss/run/provider/yagnadir/activity.db
+          if-no-files-found: ignore
