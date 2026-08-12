@@ -1,0 +1,25 @@
+{
+  "ver": "V1",
+  "active": [
+    "vm"
+  ],
+  "presets": [
+    {
+      "name": "default",
+      "exeunit-name": "wasmtime",
+      "pricing-model": "linear",
+      "initial-price": 0.0,
+      "usage-coeffs": {}
+    },
+    {
+      "name": "vm",
+      "exeunit-name": "vm",
+      "pricing-model": "linear",
+      "initial-price": 0.0,
+      "usage-coeffs": {
+        "golem.usage.cpu_sec": 0.0001,
+        "golem.usage.duration_sec": 0.0001
+      }
+    }
+  ]
+}
