@@ -73,6 +73,9 @@ async function oneCycle(i) {
         maxTaskRetries: 0,
         taskTimeout: 1000 * 60,
         expirationSec: 60 * 10,
+        // Fail a cycle quickly when no proposals arrive at all (broken local
+        // net) instead of blocking the whole run on the default 90s wait.
+        startupTimeout: 1000 * 45,
     });
 
     try {

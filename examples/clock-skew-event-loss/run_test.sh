@@ -80,7 +80,12 @@ wait_api() { # url name
 echo "==> starting ya-sb-router :$ROUTER_PORT"
 "$BIN_DIR/ya-sb-router" -l "tcp://127.0.0.1:$ROUTER_PORT" > "$RUN/router.log" 2>&1 &
 PIDS+=($!)
-sleep 1
+# The daemons' central-net client must not race the router's socket: a missed
+# initial connect leaves market broadcasts silently dead on slow CI runners.
+for _ in $(seq 1 30); do
+    (exec 3<>"/dev/tcp/127.0.0.1/$ROUTER_PORT") 2>/dev/null && { exec 3>&- 2>/dev/null; echo "    router accepting connections"; break; }
+    sleep 1
+done
 
 echo "==> starting provider yagna daemon"
 (

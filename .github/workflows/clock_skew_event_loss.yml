@@ -20,7 +20,7 @@ on:
 jobs:
   run_test:
     name: Clock-skew event loss
-    timeout-minutes: 20
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
