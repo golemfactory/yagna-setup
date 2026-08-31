@@ -11,7 +11,7 @@
 //   finished.marker - written when the task returned its result
 //
 // Exit code 0 means the task completed, 1 means it didn't. The second
-// invocation of this script (after the drain started) is expected to fail:
+// invocation of this script (after the stop was requested) is expected to fail:
 // the provider should no longer be reachable through the market.
 
 import { TaskExecutor, pinoPrettyLogger } from "@golem-sdk/task-executor";

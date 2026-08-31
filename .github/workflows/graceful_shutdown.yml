@@ -57,8 +57,6 @@ jobs:
           # fail early and clearly if the bundle predates the feature
           golemsp stop --help | grep -q -- --graceful \
             || { echo "this yagna build has no 'golemsp stop --graceful'"; exit 1; }
-          golemsp stop --help | grep -q -- --provider-only \
-            || { echo "this yagna build has no 'golemsp stop --provider-only'"; exit 1; }
 
 #### Central net router is responsible for local communication of the nodes
 
@@ -122,7 +120,7 @@ jobs:
           YA_CONSENT_EXTERNAL: "allow"
 
 #### The actual test: run a task, request a graceful stop while it computes,
-#### and check that the task finishes before the provider goes down.
+#### and check that the task finishes before the node goes down.
 
       - name: Run graceful shutdown test
         run: |

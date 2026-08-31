@@ -8,8 +8,8 @@
 #
 # What it checks:
 #   1. a task that is already running is NOT killed by the graceful stop
-#   2. the provider stops accepting new work as soon as the drain starts
-#   3. the provider exits only after the running task finished
+#   2. the provider stops accepting new work as soon as the stop is requested
+#   3. the provider is stopped only after the running task finished
 #   4. `golemsp stop --graceful` exits once both processes are gone
 #   5. the shutdown request is reset when the provider starts again
 #
@@ -37,7 +37,7 @@ PROVIDER_APPKEY="${PROVIDER_APPKEY:-provider111}"
 export TASK_DURATION_SEC="${TASK_DURATION_SEC:-180}"
 # How long we wait for the first task to reach the provider.
 START_TIMEOUT="${START_TIMEOUT:-420}"
-# How long we wait for the drain to complete after the task finished.
+# How long we wait for the stop to complete after the task finished.
 STOP_TIMEOUT="${STOP_TIMEOUT:-300}"
 
 failed=0
@@ -120,9 +120,9 @@ else
     tail -50 task.log
 fi
 
-# The provider must not take on anything new while draining. With a single
-# provider on the local net, a second requestor run has nothing left to match.
-info "checking that no new work is accepted during the drain"
+# The provider must not take on anything new while shutting down. Its offer is
+# still published, so the second requestor finds it and gets rejected.
+info "checking that no new work is accepted while shutting down"
 MARKER_PREFIX=late TASK_DURATION_SEC=5 EXECUTOR_TIMEOUT_SEC=90 \
     YAGNA_API_URL="$REQUESTOR_API_URL" YAGNA_APPKEY="$REQUESTOR_APPKEY" \
     timeout 300 node index.js >late_task.log 2>&1
@@ -130,7 +130,7 @@ late_status=$?
 if [ "$late_status" -ne 0 ] && [ ! -f late.started.marker ]; then
     pass "second task never got an agreement (exit $late_status)"
 else
-    fail "provider accepted new work while draining (exit $late_status)"
+    fail "provider accepted new work while shutting down (exit $late_status)"
     tail -30 late_task.log
 fi
 
@@ -142,17 +142,17 @@ task_status=$?
 task_finished=$(stat -c %Y task.finished.marker 2>/dev/null || date +%s)
 
 if [ "$task_status" -eq 0 ] && [ -f task.finished.marker ]; then
-    pass "task completed normally during the drain (exit 0)"
+    pass "task completed normally while the node was shutting down (exit 0)"
 else
     fail "task did not complete (exit $task_status)"
     tail -50 task.log
 fi
 
-drain_duration=$((task_finished - stop_requested))
-if [ "$drain_duration" -ge 30 ]; then
-    pass "provider kept computing for ${drain_duration}s after the stop request"
+compute_duration=$((task_finished - stop_requested))
+if [ "$compute_duration" -ge 30 ]; then
+    pass "provider kept computing for ${compute_duration}s after the stop request"
 else
-    fail "task finished only ${drain_duration}s after the stop request - too fast to prove anything"
+    fail "task finished only ${compute_duration}s after the stop request - too fast to prove anything"
 fi
 
 info "waiting for golemsp stop to return"
@@ -186,13 +186,19 @@ else
     pass "yagna stopped"
 fi
 
-if grep -qr "Graceful shutdown finished" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
-    pass "provider log confirms the drain finished the shutdown"
+if grep -qr "Graceful shutdown requested" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
+    pass "provider log confirms it saw the shutdown request"
 else
-    fail "no 'Graceful shutdown finished' in the provider log - did it exit for another reason?"
+    fail "no 'Graceful shutdown requested' in the provider log - did it notice the request?"
 fi
 
-# The request file is reset on start, so a stale request can't drain a fresh run.
+if grep -qr "due to graceful shutdown" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
+    pass "provider log confirms proposals were rejected while shutting down"
+else
+    fail "no rejected proposals in the provider log - was the second task refused for another reason?"
+fi
+
+# The request file is reset on start, so a stale request can't silence a fresh run.
 if [ -n "$PROVIDER_RUN_DIR" ]; then
     info "restarting the provider node to check the request is reset"
     # The requestor's appkey is in the environment for the task above; passing
@@ -214,38 +220,21 @@ if [ -n "$PROVIDER_RUN_DIR" ]; then
         tail -20 restart_provider.log 2>/dev/null
     fi
 
-    # --provider-only stops the agent and leaves the node's yagna up, so the
-    # identity, payments and market state survive an agent restart.
-    info "checking --provider-only leaves yagna running"
+    # A plain stop takes the restarted node down again, without waiting.
+    info "checking a plain stop takes the restarted node down"
     restarted_provider_pid=$(read_pid "$PROVIDER_DATA_DIR/ya-provider.pid")
     restarted_yagna_pid=$(read_pid "$YAGNA_DATA_DIR/yagna.pid")
 
-    YAGNA_API_URL="$PROVIDER_API_URL" YAGNA_APPKEY="$PROVIDER_APPKEY" \
-        golemsp stop --graceful --provider-only >provider_only_stop.log 2>&1
-    provider_only_status=$?
-    cat provider_only_stop.log
+    golemsp stop >restart_stop.log 2>&1
+    restart_stop_status=$?
+    cat restart_stop.log
 
-    if [ "$provider_only_status" -eq 0 ] &&
-        [ -n "${restarted_provider_pid:-}" ] && ! alive "$restarted_provider_pid"; then
-        pass "ya-provider stopped by --provider-only"
+    if [ "$restart_stop_status" -eq 0 ] &&
+        [ -n "${restarted_provider_pid:-}" ] && ! alive "$restarted_provider_pid" &&
+        [ -n "${restarted_yagna_pid:-}" ] && ! alive "$restarted_yagna_pid"; then
+        pass "plain stop took down the restarted node"
     else
-        fail "--provider-only did not stop ya-provider (exit $provider_only_status)"
-    fi
-
-    if [ -n "${restarted_yagna_pid:-}" ] && alive "$restarted_yagna_pid"; then
-        pass "yagna left running by --provider-only"
-    else
-        fail "--provider-only took yagna down as well"
-    fi
-
-    # ...and a plain stop afterwards still cleans that yagna up.
-    golemsp stop >provider_only_cleanup.log 2>&1
-    cleanup_status=$?
-    if [ "$cleanup_status" -eq 0 ] && ! alive "${restarted_yagna_pid:-0}"; then
-        pass "plain stop cleaned up the leftover yagna"
-    else
-        fail "leftover yagna survived a plain stop (exit $cleanup_status)"
-        cat provider_only_cleanup.log
+        fail "restarted node survived a plain stop (exit $restart_stop_status)"
     fi
 fi
 
