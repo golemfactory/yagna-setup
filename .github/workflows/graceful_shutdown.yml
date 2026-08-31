@@ -6,7 +6,7 @@ on:
       yagna_tag:
         description: 'yagna release to test (must contain golemsp stop --graceful)'
         required: false
-        default: 'pre-rel-v0.18.0-graceful-stop1'
+        default: 'pre-rel-v0.18.0-graceful-stop2'
       task_duration_sec:
         description: 'How long the task computes on the provider'
         required: false
@@ -20,25 +20,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-#### `golemsp stop --graceful` is newer than the last official release, so the
-#### binaries come from the pre-release tag built off the feature branch.
+#### The vm runtime, the router and gftp come from the usual release bundle.
 
       - name: Download and install binaries
         run: |
           /bin/bash download_binaries.sh
-        env:
-          YAGNA_TAG: ${{ github.event.inputs.yagna_tag || 'pre-rel-v0.18.0-graceful-stop1' }}
 
       - name: Install binaries
         run: |
           sudo mkdir -p /usr/lib/yagna
           sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
           sudo mv golem/downloaded/* /usr/bin/
+
+#### `golemsp stop --graceful` is newer than the last official release, so yagna
+#### itself is replaced with the pre-release tag built off the feature branch.
+#### It is fetched from the GitHub release: the CDN download_binaries.sh uses
+#### only carries official releases and answers 403 for a pre-release tag.
+
+      - name: Install yagna from the pre-release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          YAGNA_TAG: ${{ github.event.inputs.yagna_tag || 'pre-rel-v0.18.0-graceful-stop2' }}
+        run: |
+          bundle="golem-provider-linux-${YAGNA_TAG}"
+          gh release download "$YAGNA_TAG" --repo golemfactory/yagna \
+            --pattern "${bundle}.tar.gz" --dir yagna-release
+          tar -xzf "yagna-release/${bundle}.tar.gz" -C yagna-release
+          sudo install -m 755 "yagna-release/${bundle}"/{yagna,ya-provider,golemsp} /usr/bin/
+          sudo install -m 755 "yagna-release/${bundle}/plugins/exe-unit" /usr/lib/yagna/plugins/exe-unit
           golemsp --version
           ya-provider --version
           # fail early and clearly if the release predates the feature
           golemsp stop --help | grep -q -- --graceful \
             || { echo "this yagna release has no 'golemsp stop --graceful'"; exit 1; }
+          golemsp stop --help | grep -q -- --provider-only \
+            || { echo "this yagna release has no 'golemsp stop --provider-only'"; exit 1; }
 
 #### Central net router is responsible for local communication of the nodes
 

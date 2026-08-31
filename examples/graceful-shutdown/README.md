@@ -46,7 +46,7 @@ Useful knobs (all optional):
 
 The test needs a yagna build that has `golemsp stop --graceful`. Until the
 feature lands in an official release, the workflow installs the pre-release tag
-`pre-rel-v0.18.0-graceful-stop1`, built from the feature branch; point the
+`pre-rel-v0.18.0-graceful-stop2`, built from the feature branch; point the
 `yagna_tag` input at another release to test that one instead. The workflow
 checks the flag exists before provisioning anything, so an older release fails
 immediately instead of halfway through the run.
