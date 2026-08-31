@@ -3,10 +3,10 @@ name: Graceful shutdown
 on:
   workflow_dispatch:
     inputs:
-      yagna_ref:
-        description: 'yagna branch/tag/sha to build and test'
+      yagna_tag:
+        description: 'yagna release to test (must contain golemsp stop --graceful)'
         required: false
-        default: 'master'
+        default: 'pre-rel-v0.18.0-graceful-stop1'
       task_duration_sec:
         description: 'How long the task computes on the provider'
         required: false
@@ -15,53 +15,30 @@ on:
 jobs:
   run_test:
     name: golemsp stop --graceful
-    timeout-minutes: 45
+    timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-#### The feature under test is newer than any released binary, so yagna is
-#### built from source. Everything else comes from the usual release bundle.
-
-      - name: Checkout yagna
-        uses: actions/checkout@v4
-        with:
-          repository: golemfactory/yagna
-          ref: ${{ github.event.inputs.yagna_ref || 'master' }}
-          path: yagna-src
-          submodules: recursive
-
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake libssl-dev build-essential
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: yagna-src
-
-      - name: Build yagna binaries
-        run: |
-          cd yagna-src
-          cargo build -p yagna -p ya-provider -p golemsp -p ya-exe-unit --bins
+#### `golemsp stop --graceful` is newer than the last official release, so the
+#### binaries come from the pre-release tag built off the feature branch.
 
       - name: Download and install binaries
         run: |
           /bin/bash download_binaries.sh
+        env:
+          YAGNA_TAG: ${{ github.event.inputs.yagna_tag || 'pre-rel-v0.18.0-graceful-stop1' }}
 
       - name: Install binaries
         run: |
-          sudo mkdir -p /usr/lib/yagna/plugins
-          sudo mv golem/downloaded/plugins/* /usr/lib/yagna/plugins/
-          sudo rm -rf golem/downloaded/plugins
+          sudo mkdir -p /usr/lib/yagna
+          sudo mv golem/downloaded/plugins /usr/lib/yagna/plugins
           sudo mv golem/downloaded/* /usr/bin/
-          # freshly built binaries win over the released ones
-          sudo install -m 755 yagna-src/target/debug/yagna /usr/bin/yagna
-          sudo install -m 755 yagna-src/target/debug/ya-provider /usr/bin/ya-provider
-          sudo install -m 755 yagna-src/target/debug/golemsp /usr/bin/golemsp
-          sudo install -m 755 yagna-src/target/debug/exe-unit /usr/lib/yagna/plugins/exe-unit
           golemsp --version
           ya-provider --version
+          # fail early and clearly if the release predates the feature
+          golemsp stop --help | grep -q -- --graceful \
+            || { echo "this yagna release has no 'golemsp stop --graceful'"; exit 1; }
 
 #### Central net router is responsible for local communication of the nodes
 
@@ -92,8 +69,7 @@ jobs:
         run: |
           cd golem/requestor
           yagna service run&
-          # debug builds boot slower than the release binaries
-          sleep 20
+          sleep 8
           yagna app-key list
 
 #### `golemsp stop` reads the pid files from the default data directories
@@ -118,7 +94,7 @@ jobs:
           sudo chown $USER /dev/kvm
           cd golem/provider_0
           yagna service run&
-          sleep 20
+          sleep 8
           ya-provider run&
           # give the provider time to subscribe and broadcast its offer
           sleep 30

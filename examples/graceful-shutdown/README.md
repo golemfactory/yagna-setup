@@ -40,6 +40,9 @@ Useful knobs (all optional):
 | `PROVIDER_API_URL` | `http://127.0.0.1:7541` | REST API of the node being stopped |
 | `PROVIDER_RUN_DIR` | *(empty)* | directory with the provider `.env`; set it to enable the restart check |
 
-The test needs a yagna build that has `golemsp stop --graceful` (yagna >= the
-graceful shutdown feature); against older binaries `golemsp stop` rejects the
-flag and the test fails right after the task starts.
+The test needs a yagna build that has `golemsp stop --graceful`. Until the
+feature lands in an official release, the workflow installs the pre-release tag
+`pre-rel-v0.18.0-graceful-stop1`, built from the feature branch; point the
+`yagna_tag` input at another release to test that one instead. The workflow
+checks the flag exists before provisioning anything, so an older release fails
+immediately instead of halfway through the run.
