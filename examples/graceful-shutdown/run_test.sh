@@ -195,17 +195,23 @@ fi
 # The request file is reset on start, so a stale request can't drain a fresh run.
 if [ -n "$PROVIDER_RUN_DIR" ]; then
     info "restarting the provider node to check the request is reset"
+    # The requestor's appkey is in the environment for the task above; passing
+    # the node's own credentials keeps the restarted provider from
+    # authenticating against its yagna with the wrong key and dying on startup.
+    log_dir="$PWD"
     (
         cd "$PROVIDER_RUN_DIR" || exit 1
-        yagna service run >restart_yagna.log 2>&1 &
+        export YAGNA_APPKEY="$PROVIDER_APPKEY" YAGNA_API_URL="$PROVIDER_API_URL"
+        yagna service run >"$log_dir/restart_yagna.log" 2>&1 &
         sleep "${RESTART_YAGNA_WAIT:-25}"
-        ya-provider run >restart_provider.log 2>&1 &
+        ya-provider run >"$log_dir/restart_provider.log" 2>&1 &
         sleep "${RESTART_PROVIDER_WAIT:-30}"
     )
     if grep -q '"gracefulShutdownRequested": *false' "$SHUTDOWN_FILE" 2>/dev/null; then
         pass "shutdown request was reset on provider start"
     else
         fail "stale shutdown request after restart: $(cat "$SHUTDOWN_FILE" 2>/dev/null)"
+        tail -20 restart_provider.log 2>/dev/null
     fi
 
     # --provider-only stops the agent and leaves the node's yagna up, so the
