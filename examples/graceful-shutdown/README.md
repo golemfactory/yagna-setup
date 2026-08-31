@@ -46,7 +46,7 @@ Useful knobs (all optional):
 
 The test needs a yagna build that has `golemsp stop --graceful`. Until the
 feature lands in an official release, the workflow installs a pre-release bundle
-attached to a release in *this* repository (`yagna-binaries-graceful-stop2`,
+attached to a release in *this* repository (`stop-2`,
 copied from the yagna release `pre-rel-v0.18.0-graceful-stop2`). It lives here
 because golemfactory/yagna is private - CI's `GITHUB_TOKEN` cannot read releases
 there - and the CDN `download_binaries.sh` uses only mirrors official releases.

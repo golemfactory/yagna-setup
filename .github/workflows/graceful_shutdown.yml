@@ -6,7 +6,7 @@ on:
       binaries_release:
         description: 'release in THIS repo holding the yagna bundle to test'
         required: false
-        default: 'yagna-binaries-graceful-stop2'
+        default: 'stop-2'
       task_duration_sec:
         description: 'How long the task computes on the provider'
         required: false
@@ -44,7 +44,7 @@ jobs:
       - name: Install the yagna bundle under test
         env:
           GH_TOKEN: ${{ github.token }}
-          BINARIES_RELEASE: ${{ github.event.inputs.binaries_release || 'yagna-binaries-graceful-stop2' }}
+          BINARIES_RELEASE: ${{ github.event.inputs.binaries_release || 'stop-2' }}
         run: |
           gh release download "$BINARIES_RELEASE" --repo "$GITHUB_REPOSITORY" \
             --pattern 'golem-provider-linux-*.tar.gz' --dir yagna-release
@@ -140,9 +140,9 @@ jobs:
       - name: Stop services
         if: always()
         run: |
+          # best effort: the run may have failed before anything was provisioned
           golemsp stop || true
-          cd golem/requestor
-          yagna service shutdown || true
+          (cd golem/requestor && yagna service shutdown) || true
 
       - name: Prepare logs
         if: always()
