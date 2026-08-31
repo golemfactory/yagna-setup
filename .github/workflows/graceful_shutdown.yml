@@ -1,0 +1,166 @@
+name: Graceful shutdown
+
+on:
+  workflow_dispatch:
+    inputs:
+      yagna_ref:
+        description: 'yagna branch/tag/sha to build and test'
+        required: false
+        default: 'master'
+      task_duration_sec:
+        description: 'How long the task computes on the provider'
+        required: false
+        default: '180'
+
+jobs:
+  run_test:
+    name: golemsp stop --graceful
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+#### The feature under test is newer than any released binary, so yagna is
+#### built from source. Everything else comes from the usual release bundle.
+
+      - name: Checkout yagna
+        uses: actions/checkout@v4
+        with:
+          repository: golemfactory/yagna
+          ref: ${{ github.event.inputs.yagna_ref || 'master' }}
+          path: yagna-src
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libssl-dev build-essential
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: yagna-src
+
+      - name: Build yagna binaries
+        run: |
+          cd yagna-src
+          cargo build -p yagna -p ya-provider -p golemsp -p ya-exe-unit --bins
+
+      - name: Download and install binaries
+        run: |
+          /bin/bash download_binaries.sh
+
+      - name: Install binaries
+        run: |
+          sudo mkdir -p /usr/lib/yagna/plugins
+          sudo mv golem/downloaded/plugins/* /usr/lib/yagna/plugins/
+          sudo rm -rf golem/downloaded/plugins
+          sudo mv golem/downloaded/* /usr/bin/
+          # freshly built binaries win over the released ones
+          sudo install -m 755 yagna-src/target/debug/yagna /usr/bin/yagna
+          sudo install -m 755 yagna-src/target/debug/ya-provider /usr/bin/ya-provider
+          sudo install -m 755 yagna-src/target/debug/golemsp /usr/bin/golemsp
+          sudo install -m 755 yagna-src/target/debug/exe-unit /usr/lib/yagna/plugins/exe-unit
+          golemsp --version
+          ya-provider --version
+
+#### Central net router is responsible for local communication of the nodes
+
+      - name: Run central-net router
+        run: |
+          ya-sb-router -l tcp://127.0.0.1:5555&
+          echo CENTRAL_NET_HOST=127.0.0.1:5555 >> $GITHUB_ENV
+
+      - name: Prepare runtime
+        run: |
+          python advanced/prepare_runtime.py --mode central --num-providers 1
+
+#### No real funds: the erc20 driver is told to skip allocation validation
+#### (YAGNA_DEV_SKIP_ALLOCATION_VALIDATION), so allocations validate as funded.
+
+      - name: Configure requestor without funding
+        run: |
+          cd golem/requestor
+          {
+            echo "YAGNA_AUTOCONF_APPKEY=66iiOdkvV29"
+            echo "YAGNA_APPKEY=66iiOdkvV29"
+            echo "YA_PAYMENT_NETWORK=hoodi"
+            echo "YAGNA_DEV_SKIP_ALLOCATION_VALIDATION=1"
+          } >> .env
+          cat .env
+
+      - name: Run requestor
+        run: |
+          cd golem/requestor
+          yagna service run&
+          # debug builds boot slower than the release binaries
+          sleep 20
+          yagna app-key list
+
+#### `golemsp stop` reads the pid files from the default data directories
+#### (~/.local/share/{yagna,ya-provider}) and ignores YAGNA_DATADIR / DATA_DIR,
+#### so the provider node under test runs with the defaults. Only the requestor
+#### keeps its own data dir - the two nodes are kept apart by GSB/API ports.
+
+      - name: Prepare provider
+        run: |
+          cd golem/provider_0
+          sed -i '/^YAGNA_DATADIR=/d;/^DATA_DIR=/d' .env
+          echo "MEAN_CYCLIC_BCAST_INTERVAL=10sec" >> .env
+          cat .env
+          golemsp setup --no-interactive
+          ya-provider preset update --no-interactive --name=vm --price="cpu=0.016" --price="duration=1.111"
+          ya-provider preset list
+        env:
+          YA_CONSENT_EXTERNAL: "allow"
+
+      - name: Run provider
+        run: |
+          sudo chown $USER /dev/kvm
+          cd golem/provider_0
+          yagna service run&
+          sleep 20
+          ya-provider run&
+          # give the provider time to subscribe and broadcast its offer
+          sleep 30
+        env:
+          YA_CONSENT_EXTERNAL: "allow"
+
+#### The actual test: run a task, request a graceful stop while it computes,
+#### and check that the task finishes before the provider goes down.
+
+      - name: Run graceful shutdown test
+        run: |
+          echo "YAGNA_SUBNET=public" > examples/graceful-shutdown/.env
+          examples/graceful-shutdown/run_test.sh
+        env:
+          YAGNA_APPKEY: 66iiOdkvV29
+          YA_PAYMENT_NETWORK: hoodi
+          TASK_DURATION_SEC: ${{ github.event.inputs.task_duration_sec || '180' }}
+          PROVIDER_RUN_DIR: ${{ github.workspace }}/golem/provider_0
+          YA_CONSENT_EXTERNAL: "allow"
+
+#### Stop whatever is left running
+
+      - name: Stop services
+        if: always()
+        run: |
+          golemsp stop || true
+          cd golem/requestor
+          yagna service shutdown || true
+
+      - name: Prepare logs
+        if: always()
+        run: |
+          rm -rf ~/.local/share/ya-provider/exe-unit/cache
+          tar --zstd -cf graceful_shutdown_logs.tar.zst \
+            golem/requestor/yagnadir \
+            ~/.local/share/ya-provider \
+            ~/.local/share/yagna \
+            examples/graceful-shutdown/*.log || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graceful_shutdown_logs.tar.zst
+          path: graceful_shutdown_logs.tar.zst
