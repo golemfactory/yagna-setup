@@ -12,6 +12,10 @@ agreed to, and only then shut down.
 4. `golemsp stop --graceful` returns once ya-provider and yagna are both gone.
 5. The shutdown request in `shutdown-status.json` is reset when the provider
    starts again, so a stale request can't drain a fresh run.
+6. `--provider-only` stops the agent and leaves that node's yagna running, and a
+   plain `golemsp stop` afterwards still cleans the leftover yagna up.
+
+Checks 5 and 6 need `PROVIDER_RUN_DIR` set (the workflow does).
 
 ## Running it
 

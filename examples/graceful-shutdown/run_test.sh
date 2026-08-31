@@ -207,7 +207,40 @@ if [ -n "$PROVIDER_RUN_DIR" ]; then
     else
         fail "stale shutdown request after restart: $(cat "$SHUTDOWN_FILE" 2>/dev/null)"
     fi
-    golemsp stop >/dev/null 2>&1 || true
+
+    # --provider-only stops the agent and leaves the node's yagna up, so the
+    # identity, payments and market state survive an agent restart.
+    info "checking --provider-only leaves yagna running"
+    restarted_provider_pid=$(read_pid "$PROVIDER_DATA_DIR/ya-provider.pid")
+    restarted_yagna_pid=$(read_pid "$YAGNA_DATA_DIR/yagna.pid")
+
+    YAGNA_API_URL="$PROVIDER_API_URL" YAGNA_APPKEY="$PROVIDER_APPKEY" \
+        golemsp stop --graceful --provider-only >provider_only_stop.log 2>&1
+    provider_only_status=$?
+    cat provider_only_stop.log
+
+    if [ "$provider_only_status" -eq 0 ] &&
+        [ -n "${restarted_provider_pid:-}" ] && ! alive "$restarted_provider_pid"; then
+        pass "ya-provider stopped by --provider-only"
+    else
+        fail "--provider-only did not stop ya-provider (exit $provider_only_status)"
+    fi
+
+    if [ -n "${restarted_yagna_pid:-}" ] && alive "$restarted_yagna_pid"; then
+        pass "yagna left running by --provider-only"
+    else
+        fail "--provider-only took yagna down as well"
+    fi
+
+    # ...and a plain stop afterwards still cleans that yagna up.
+    golemsp stop >provider_only_cleanup.log 2>&1
+    cleanup_status=$?
+    if [ "$cleanup_status" -eq 0 ] && ! alive "${restarted_yagna_pid:-0}"; then
+        pass "plain stop cleaned up the leftover yagna"
+    else
+        fail "leftover yagna survived a plain stop (exit $cleanup_status)"
+        cat provider_only_cleanup.log
+    fi
 fi
 
 if [ "$failed" -eq 0 ]; then
