@@ -45,8 +45,13 @@ Useful knobs (all optional):
 | `PROVIDER_RUN_DIR` | *(empty)* | directory with the provider `.env`; set it to enable the restart check |
 
 The test needs a yagna build that has `golemsp stop --graceful`. Until the
-feature lands in an official release, the workflow installs the pre-release tag
-`pre-rel-v0.18.0-graceful-stop2`, built from the feature branch; point the
-`yagna_tag` input at another release to test that one instead. The workflow
-checks the flag exists before provisioning anything, so an older release fails
-immediately instead of halfway through the run.
+feature lands in an official release, the workflow installs a pre-release bundle
+attached to a release in *this* repository (`yagna-binaries-graceful-stop2`,
+copied from the yagna release `pre-rel-v0.18.0-graceful-stop2`). It lives here
+because golemfactory/yagna is private - CI's `GITHUB_TOKEN` cannot read releases
+there - and the CDN `download_binaries.sh` uses only mirrors official releases.
+
+To test a newer build, attach its `golem-provider-linux-*.tar.gz` to a new
+release here and pass that release through the `binaries_release` input. The
+workflow checks both flags exist before provisioning anything, so an older
+bundle fails immediately instead of halfway through the run.
