@@ -11,14 +11,33 @@ on:
         description: 'How long the task computes on the provider'
         required: false
         default: '180'
+      golem_js_ref:
+        description: 'golem-js ref with agreementShutdownNoticeReceived support (empty skips the notice scenario)'
+        required: false
+        default: 'feature/agreement-shutdown-notice'
 
 jobs:
   run_test:
     name: golemsp stop --graceful
-    timeout-minutes: 30
+    timeout-minutes: 45
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+#### The shutdown-notice scenario needs a golem-js that understands the new
+#### `agreementShutdownNoticeReceived` event. Until that is on npm the SDK is
+#### built from a branch and handed to the test as a packed tarball.
+
+      - name: Build golem-js with shutdown-notice support
+        if: ${{ github.event.inputs.golem_js_ref != '' }}
+        run: |
+          git clone --depth 1 --branch "${{ github.event.inputs.golem_js_ref || 'feature/agreement-shutdown-notice' }}" \
+            https://github.com/golemfactory/golem-js.git /tmp/golem-js
+          cd /tmp/golem-js
+          npm ci --no-audit --no-fund
+          npm run build
+          npm pack --pack-destination /tmp
+          echo "GOLEM_JS_TARBALL=$(ls /tmp/golem-sdk-golem-js-*.tgz)" >> "$GITHUB_ENV"
 
 #### The vm runtime, the router and gftp come from the usual release bundle.
 
@@ -132,6 +151,8 @@ jobs:
           TASK_DURATION_SEC: ${{ github.event.inputs.task_duration_sec || '180' }}
           PROVIDER_RUN_DIR: ${{ github.workspace }}/golem/provider_0
           YA_CONSENT_EXTERNAL: "allow"
+          # GOLEM_JS_TARBALL arrives via GITHUB_ENV from the golem-js build
+          # step; when that step is skipped the notice scenario is skipped too.
 
 #### Stop whatever is left running
 

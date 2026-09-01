@@ -12,6 +12,9 @@
 #   3. the provider is stopped only after the running task finished
 #   4. `golemsp stop --graceful` exits once both processes are gone
 #   5. the shutdown request is reset when the provider starts again
+#   6. requestors are notified: a cooperative golem-js requestor receives
+#      `agreementTerminationNoticeReceived`, winds its work down and terminates,
+#      which lets the stop finish early (needs GOLEM_JS_TARBALL, see below)
 #
 # Usage: examples/graceful-shutdown/run_test.sh
 
@@ -32,6 +35,10 @@ REQUESTOR_API_URL="${REQUESTOR_API_URL:-http://127.0.0.1:7465}"
 REQUESTOR_APPKEY="${REQUESTOR_APPKEY:-66iiOdkvV29}"
 PROVIDER_API_URL="${PROVIDER_API_URL:-http://127.0.0.1:7541}"
 PROVIDER_APPKEY="${PROVIDER_APPKEY:-provider111}"
+# `golemsp stop --graceful` polls agreements through the yagna CLI, which
+# talks GSB - it must point at the provider daemon's service bus, or the
+# count comes from the wrong node.
+PROVIDER_GSB_URL="${PROVIDER_GSB_URL:-tcp://127.0.0.1:7540}"
 
 # The task has to outlive the "provider refuses new work" probe below.
 export TASK_DURATION_SEC="${TASK_DURATION_SEC:-180}"
@@ -65,11 +72,35 @@ read_pid() {
     [ -f "$file" ] && cat "$file"
 }
 
+# A fresh daemon can take a while to open its API (migrations, identity);
+# a fixed sleep is not reliable, so poll authenticated endpoints. /me answers
+# early in startup; the market REST scope binds later (after the net
+# connects), so require both before declaring the daemon ready.
+wait_api() {
+    local url="$1" key="$2" timeout="${3:-120}" waited=0
+    while ! curl -sf -H "Authorization: Bearer $key" "$url/me" >/dev/null 2>&1 ||
+        ! curl -sf -H "Authorization: Bearer $key" "$url/market-api/v1/agreements" >/dev/null 2>&1; do
+        [ "$waited" -ge "$timeout" ] && return 1
+        sleep 2
+        waited=$((waited + 2))
+    done
+    return 0
+}
+
 info "installing test dependencies"
 npm install --silent || exit 1
 
+# The shutdown-notice scenario needs a golem-js that understands
+# `agreementTerminationNoticeReceived`. Until that is released on npm, CI builds
+# it from a branch and hands the packed tarball over in GOLEM_JS_TARBALL.
+if [ -n "${GOLEM_JS_TARBALL:-}" ]; then
+    info "installing golem-js from $GOLEM_JS_TARBALL"
+    npm install --silent "$GOLEM_JS_TARBALL" || exit 1
+fi
+
 # Markers left by an earlier run would make the wait below return immediately.
 rm -f task.started.marker task.finished.marker late.started.marker late.finished.marker
+rm -f notice.started.marker notice.notice.marker notice.finished.marker
 
 info "starting the long task (${TASK_DURATION_SEC}s on the provider)"
 MARKER_PREFIX=task YAGNA_API_URL="$REQUESTOR_API_URL" YAGNA_APPKEY="$REQUESTOR_APPKEY" \
@@ -96,6 +127,7 @@ info "provider pid $provider_pid, yagna pid $yagna_pid"
 info "requesting graceful stop while the task is running"
 stop_requested=$(date +%s)
 YAGNA_API_URL="$PROVIDER_API_URL" YAGNA_APPKEY="$PROVIDER_APPKEY" \
+    GSB_URL="$PROVIDER_GSB_URL" \
     golemsp stop --graceful >stop.log 2>&1 &
 stop_pid=$!
 
@@ -236,6 +268,108 @@ if [ -n "$PROVIDER_RUN_DIR" ]; then
     else
         fail "restarted node survived a plain stop (exit $restart_stop_status)"
     fi
+fi
+
+# Scenario 6: a cooperative requestor is told about the shutdown and winds
+# down on its own, so the graceful stop does not have to wait the task out.
+if [ -n "$PROVIDER_RUN_DIR" ] && [ -n "${GOLEM_JS_TARBALL:-}" ]; then
+    info "starting the node again for the shutdown-notice scenario"
+    log_dir="$PWD"
+    # A subnet of its own: the requestor's offer store still holds offers from
+    # the earlier provider sessions of this very node. The SDK is free to
+    # counter such a stale offer - the daemon accepts it into a subscription
+    # no agent polls any more and the negotiation hangs forever. A fresh
+    # subnet makes only the freshly started provider's offer match.
+    NOTICE_SUBNET="${NOTICE_SUBNET:-notice-$$}"
+    (
+        cd "$PROVIDER_RUN_DIR" || exit 1
+        export YAGNA_APPKEY="$PROVIDER_APPKEY" YAGNA_API_URL="$PROVIDER_API_URL"
+        export SUBNET="$NOTICE_SUBNET"
+        yagna service run >"$log_dir/notice_yagna.log" 2>&1 &
+        wait_api "$PROVIDER_API_URL" "$PROVIDER_APPKEY" 120 || {
+            echo "provider daemon API did not come up"
+            tail -20 "$log_dir/notice_yagna.log"
+            exit 1
+        }
+        ya-provider run >"$log_dir/notice_provider.log" 2>&1 &
+        # give the provider time to subscribe and broadcast its offer
+        sleep "${RESTART_PROVIDER_WAIT:-30}"
+    )
+
+    info "starting the cooperative requestor work loop (subnet $NOTICE_SUBNET)"
+    # DEBUG: golem-js's default logger uses the `debug` module - without it,
+    # filter decisions (e.g. price rejections) are completely silent.
+    YAGNA_API_URL="$REQUESTOR_API_URL" YAGNA_APPKEY="$REQUESTOR_APPKEY" \
+        YAGNA_SUBNET="$NOTICE_SUBNET" \
+        DEBUG="golem-js:market*,golem-js:payment*" \
+        timeout 900 node notice_task.js >notice_task.log 2>&1 &
+    notice_pid=$!
+
+    if wait_for_file notice.started.marker "$START_TIMEOUT"; then
+        pass "work loop started: $(cat notice.started.marker)"
+
+        notice_provider_pid=$(read_pid "$PROVIDER_DATA_DIR/ya-provider.pid")
+        notice_yagna_pid=$(read_pid "$YAGNA_DATA_DIR/yagna.pid")
+
+        info "requesting graceful stop while the work loop runs"
+        notice_stop_requested=$(date +%s)
+        YAGNA_API_URL="$PROVIDER_API_URL" YAGNA_APPKEY="$PROVIDER_APPKEY" \
+            GSB_URL="$PROVIDER_GSB_URL" \
+            golemsp stop --graceful >notice_stop.log 2>&1 &
+        notice_stop_pid=$!
+
+        if wait_for_file notice.notice.marker 60; then
+            notice_at=$(stat -c %Y notice.notice.marker)
+            pass "requestor got the shutdown notice in $((notice_at - notice_stop_requested))s: $(cat notice.notice.marker)"
+        else
+            fail "no shutdown notice reached the requestor within 60s"
+        fi
+
+        wait "$notice_pid"
+        notice_status=$?
+        if [ "$notice_status" -eq 0 ] && [ -f notice.finished.marker ]; then
+            pass "requestor wound down cleanly: $(cat notice.finished.marker)"
+        else
+            fail "cooperative requestor did not wind down (exit $notice_status)"
+            tail -40 notice_task.log
+        fi
+
+        waited=0
+        while alive "$notice_stop_pid"; do
+            if [ "$waited" -ge "$STOP_TIMEOUT" ]; then
+                fail "golemsp stop --graceful (notice scenario) did not return within ${STOP_TIMEOUT}s"
+                kill "$notice_stop_pid" 2>/dev/null
+                break
+            fi
+            sleep 2
+            waited=$((waited + 2))
+        done
+        if wait "$notice_stop_pid"; then
+            pass "golemsp stop returned $(($(date +%s) - notice_stop_requested))s after the request"
+        else
+            fail "golemsp stop --graceful failed in the notice scenario"
+        fi
+        cat notice_stop.log
+
+        if [ -n "${notice_provider_pid:-}" ] && ! alive "$notice_provider_pid" &&
+            [ -n "${notice_yagna_pid:-}" ] && ! alive "$notice_yagna_pid"; then
+            pass "node is down after the cooperative wind-down"
+        else
+            fail "node survived the notice-scenario stop"
+        fi
+
+        if grep -qr "Sent termination notices" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
+            pass "provider log confirms the notice was sent"
+        else
+            fail "no 'Sent termination notices' in the provider log"
+        fi
+    else
+        fail "work loop did not start on the restarted provider"
+        kill "$notice_pid" 2>/dev/null
+        tail -50 notice_task.log
+    fi
+elif [ -n "$PROVIDER_RUN_DIR" ]; then
+    info "SKIP: shutdown-notice scenario needs GOLEM_JS_TARBALL (a golem-js build with agreementTerminationNoticeReceived)"
 fi
 
 if [ "$failed" -eq 0 ]; then
