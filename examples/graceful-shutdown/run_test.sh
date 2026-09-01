@@ -152,8 +152,10 @@ else
     tail -50 task.log
 fi
 
-# The provider must not take on anything new while shutting down. Its offer is
-# still published, so the second requestor finds it and gets rejected.
+# The provider must not take on anything new while shutting down. Since
+# pre-rel-v0.18.0-graceful-stop8 the drain unsubscribes all Offers up front,
+# so the second requestor simply finds nobody; an older build kept the Offer
+# published and rejected the proposals instead.
 info "checking that no new work is accepted while shutting down"
 MARKER_PREFIX=late TASK_DURATION_SEC=5 EXECUTOR_TIMEOUT_SEC=90 \
     YAGNA_API_URL="$REQUESTOR_API_URL" YAGNA_APPKEY="$REQUESTOR_APPKEY" \
@@ -224,10 +226,10 @@ else
     fail "no 'Graceful shutdown requested' in the provider log - did it notice the request?"
 fi
 
-if grep -qr "due to graceful shutdown" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
-    pass "provider log confirms proposals were rejected while shutting down"
+if grep -qr "Unsubscribing all Offers\|due to graceful shutdown" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
+    pass "provider log confirms new work was blocked while shutting down"
 else
-    fail "no rejected proposals in the provider log - was the second task refused for another reason?"
+    fail "no Offer unsubscription nor rejected proposals in the provider log - was the second task refused for another reason?"
 fi
 
 # The request file is reset on start, so a stale request can't silence a fresh run.
