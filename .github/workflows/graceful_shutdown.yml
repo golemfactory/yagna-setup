@@ -3,10 +3,10 @@ name: Graceful shutdown
 on:
   workflow_dispatch:
     inputs:
-      binaries_release:
-        description: 'release in THIS repo holding the yagna bundle to test'
+      yagna_tag:
+        description: 'tag of the golemfactory/yagna (pre-)release holding the bundle to test'
         required: false
-        default: 'stop-2'
+        default: 'pre-rel-v0.18.0-graceful-stop8'
       task_duration_sec:
         description: 'How long the task computes on the provider'
         required: false
@@ -52,20 +52,20 @@ jobs:
           sudo mv golem/downloaded/* /usr/bin/
 
 #### `golemsp stop --graceful` is newer than the last official release, so yagna
-#### itself is replaced with a pre-release build. That bundle is attached to a
-#### release in THIS repository: golemfactory/yagna is private and the workflow's
-#### GITHUB_TOKEN is scoped to yagna-setup, so it cannot read releases over there,
-#### and the CDN download_binaries.sh uses only mirrors official releases (403 for
-#### a pre-release tag). To test a newer yagna build, attach its
-#### golem-provider-linux-*.tar.gz to a new release here and pass it as
-#### `binaries_release`.
+#### itself is replaced with a pre-release build, taken from that tag's release in
+#### golemfactory/yagna. That repo is private and the workflow's GITHUB_TOKEN is
+#### scoped to yagna-setup, so the download runs under the YAGNA_RELEASE_TOKEN
+#### secret (Contents: Read on golemfactory/yagna); the CDN download_binaries.sh
+#### uses only mirrors official releases (403 for a pre-release tag). To test a
+#### newer yagna build, tag it and pass the tag as `yagna_tag`.
 
       - name: Install the yagna bundle under test
         env:
-          GH_TOKEN: ${{ github.token }}
-          BINARIES_RELEASE: ${{ github.event.inputs.binaries_release || 'stop-2' }}
+          GH_TOKEN: ${{ secrets.YAGNA_RELEASE_TOKEN }}
+          YAGNA_TAG: ${{ github.event.inputs.yagna_tag || 'pre-rel-v0.18.0-graceful-stop8' }}
         run: |
-          gh release download "$BINARIES_RELEASE" --repo "$GITHUB_REPOSITORY" \
+          test -n "$GH_TOKEN" || { echo "secret YAGNA_RELEASE_TOKEN is not set"; exit 1; }
+          gh release download "$YAGNA_TAG" --repo golemfactory/yagna \
             --pattern 'golem-provider-linux-*.tar.gz' --dir yagna-release
           tar -xzf yagna-release/golem-provider-linux-*.tar.gz -C yagna-release
           bundle=$(find yagna-release -maxdepth 1 -type d -name 'golem-provider-linux-*')
