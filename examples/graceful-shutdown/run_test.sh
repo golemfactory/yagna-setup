@@ -14,7 +14,7 @@
 #   5. the shutdown request is reset when the provider starts again
 #   6. requestors are notified: a cooperative golem-js requestor receives
 #      `agreementTerminationNoticeReceived`, winds its work down and terminates,
-#      which lets the stop finish early (needs GOLEM_JS_TARBALL, see below)
+#      which lets the stop finish early (golem-js >= 3.11.0)
 #
 # Usage: examples/graceful-shutdown/run_test.sh
 
@@ -91,8 +91,8 @@ info "installing test dependencies"
 npm install --silent || exit 1
 
 # The shutdown-notice scenario needs a golem-js that understands
-# `agreementTerminationNoticeReceived`. Until that is released on npm, CI builds
-# it from a branch and hands the packed tarball over in GOLEM_JS_TARBALL.
+# `agreementTerminationNoticeReceived` (released in 3.11.0, see package.json).
+# GOLEM_JS_TARBALL optionally overrides it with a locally packed build.
 if [ -n "${GOLEM_JS_TARBALL:-}" ]; then
     info "installing golem-js from $GOLEM_JS_TARBALL"
     npm install --silent "$GOLEM_JS_TARBALL" || exit 1
@@ -274,7 +274,7 @@ fi
 
 # Scenario 6: a cooperative requestor is told about the shutdown and winds
 # down on its own, so the graceful stop does not have to wait the task out.
-if [ -n "$PROVIDER_RUN_DIR" ] && [ -n "${GOLEM_JS_TARBALL:-}" ]; then
+if [ -n "$PROVIDER_RUN_DIR" ]; then
     info "starting the node again for the shutdown-notice scenario"
     log_dir="$PWD"
     # A subnet of its own: the requestor's offer store still holds offers from
@@ -370,8 +370,6 @@ if [ -n "$PROVIDER_RUN_DIR" ] && [ -n "${GOLEM_JS_TARBALL:-}" ]; then
         kill "$notice_pid" 2>/dev/null
         tail -50 notice_task.log
     fi
-elif [ -n "$PROVIDER_RUN_DIR" ]; then
-    info "SKIP: shutdown-notice scenario needs GOLEM_JS_TARBALL (a golem-js build with agreementTerminationNoticeReceived)"
 fi
 
 if [ "$failed" -eq 0 ]; then
