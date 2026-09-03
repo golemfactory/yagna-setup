@@ -10,7 +10,9 @@
 #   1. a task that is already running is NOT killed by the graceful stop
 #   2. the provider stops accepting new work as soon as the stop is requested
 #   3. the provider is stopped only after the running task finished
-#   4. `golemsp stop --graceful` exits once both processes are gone
+#   4. `golemsp stop --graceful` exits once ya-provider is gone; yagna keeps
+#      running (only a supervising `golemsp run` stops it), so the test shuts
+#      the provider's yagna down itself between scenarios
 #   5. the shutdown request is reset when the provider starts again
 #   6. requestors are notified: a cooperative golem-js requestor receives
 #      `agreementTerminationNoticeReceived`, winds its work down and terminates,
@@ -54,6 +56,32 @@ fail() { echo "FAIL: $*"; failed=1; }
 info() { echo "---- $*"; }
 
 alive() { kill -0 "$1" 2>/dev/null; }
+
+# Since pre-rel-v0.18.0-rc6 `golemsp stop` stops ya-provider only; the yagna
+# service is the business of whoever started it. Stops the provider node's
+# daemon the way `golemsp run` would and waits for it to go.
+stop_provider_yagna() {
+    local pid="$1" waited=0
+    [ -n "$pid" ] || return 1
+    if [ -n "$PROVIDER_RUN_DIR" ]; then
+        (
+            cd "$PROVIDER_RUN_DIR" || exit 1
+            export YAGNA_APPKEY="$PROVIDER_APPKEY" YAGNA_API_URL="$PROVIDER_API_URL"
+            export GSB_URL="$PROVIDER_GSB_URL"
+            yagna service shutdown
+        ) || kill -TERM "$pid" 2>/dev/null
+    else
+        kill -TERM "$pid" 2>/dev/null
+    fi
+    while alive "$pid"; do
+        if [ "$waited" -ge 30 ]; then
+            return 1
+        fi
+        sleep 1
+        waited=$((waited + 1))
+    done
+    return 0
+}
 
 wait_for_file() {
     local file="$1" timeout="$2" waited=0
@@ -215,9 +243,14 @@ else
 fi
 
 if alive "$yagna_pid"; then
-    fail "yagna ($yagna_pid) is still running after the stop"
+    pass "yagna ($yagna_pid) was left running by golemsp stop"
+    if stop_provider_yagna "$yagna_pid"; then
+        pass "provider yagna shut down"
+    else
+        fail "provider yagna ($yagna_pid) did not shut down"
+    fi
 else
-    pass "yagna stopped"
+    fail "yagna ($yagna_pid) is gone - golemsp stop is expected to stop ya-provider only"
 fi
 
 if grep -qr "Graceful shutdown requested" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then
@@ -264,11 +297,15 @@ if [ -n "$PROVIDER_RUN_DIR" ]; then
     cat restart_stop.log
 
     if [ "$restart_stop_status" -eq 0 ] &&
-        [ -n "${restarted_provider_pid:-}" ] && ! alive "$restarted_provider_pid" &&
-        [ -n "${restarted_yagna_pid:-}" ] && ! alive "$restarted_yagna_pid"; then
-        pass "plain stop took down the restarted node"
+        [ -n "${restarted_provider_pid:-}" ] && ! alive "$restarted_provider_pid"; then
+        pass "plain stop took down the restarted provider"
     else
-        fail "restarted node survived a plain stop (exit $restart_stop_status)"
+        fail "restarted provider survived a plain stop (exit $restart_stop_status)"
+    fi
+    if stop_provider_yagna "${restarted_yagna_pid:-}"; then
+        pass "restarted yagna shut down"
+    else
+        fail "restarted yagna (${restarted_yagna_pid:-?}) did not shut down"
     fi
 fi
 
@@ -353,11 +390,15 @@ if [ -n "$PROVIDER_RUN_DIR" ]; then
         fi
         cat notice_stop.log
 
-        if [ -n "${notice_provider_pid:-}" ] && ! alive "$notice_provider_pid" &&
-            [ -n "${notice_yagna_pid:-}" ] && ! alive "$notice_yagna_pid"; then
-            pass "node is down after the cooperative wind-down"
+        if [ -n "${notice_provider_pid:-}" ] && ! alive "$notice_provider_pid"; then
+            pass "provider is down after the cooperative wind-down"
         else
-            fail "node survived the notice-scenario stop"
+            fail "provider survived the notice-scenario stop"
+        fi
+        if stop_provider_yagna "${notice_yagna_pid:-}"; then
+            pass "notice-scenario yagna shut down"
+        else
+            fail "notice-scenario yagna (${notice_yagna_pid:-?}) did not shut down"
         fi
 
         if grep -qr "Sent termination notices" "$PROVIDER_DATA_DIR"/*.log 2>/dev/null; then

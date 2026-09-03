@@ -140,6 +140,7 @@ jobs:
         run: |
           # best effort: the run may have failed before anything was provisioned
           golemsp stop || true
+          (cd golem/provider_0 && yagna service shutdown) || true
           (cd golem/requestor && yagna service shutdown) || true
 
       - name: Prepare logs
