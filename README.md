@@ -112,3 +112,12 @@ cp target/debug/gftp ../binaries/
 ```
 
 # Run actions
+
+## Download the development release
+
+`bash download_binaries.sh` installs the provider and requestor bundles from
+`pre-rel-v0.18.1-dev.1`, together with the pinned VM runtime and service-bus router,
+into `golem/downloaded`.
+
+Bundles are downloaded directly from public GitHub releases; no token or GitHub
+CLI login is required. Override `YAGNA_TAG` to select another release.

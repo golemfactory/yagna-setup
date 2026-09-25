@@ -1,16 +1,15 @@
-set -x
+#!/usr/bin/env bash
+set -euo pipefail
 mkdir -p golem/downloaded
 cd golem/downloaded
-# Which official yagna release to install. Override YAGNA_TAG to use another
-# release published on the CDN.
-YAGNA_TAG="${YAGNA_TAG:-v0.17.7}"
-wget -qO- https://golem-releases.cdn.golem.network/yagna/golem-provider-linux-${YAGNA_TAG}.tar.gz | tar -xvz
-wget -qO- https://golem-releases.cdn.golem.network/yagna/golem-requestor-linux-${YAGNA_TAG}.tar.gz | tar -xvz
+YAGNA_TAG="${YAGNA_TAG:-pre-rel-v0.18.1-dev.1}"
 
-mv golem-provider-linux-${YAGNA_TAG}/* .
-mv golem-requestor-linux-${YAGNA_TAG}/* .
-rm golem-provider-linux-${YAGNA_TAG} -r
-rm golem-requestor-linux-${YAGNA_TAG} -r
+for component in provider requestor; do
+    bundle="golem-${component}-linux-${YAGNA_TAG}"
+    wget -qO- "https://github.com/golemfactory/yagna/releases/download/$YAGNA_TAG/$bundle.tar.gz" | tar -xz
+    cp -a "$bundle/." .
+    rm -r "$bundle"
+done
 
 wget -qO- https://github.com/golemfactory/ya-runtime-vm/releases/download/v0.5.3/ya-runtime-vm-linux-v0.5.3.tar.gz | tar -xvz
 mv ya-runtime-vm-linux-v0.5.3/* plugins/
