@@ -131,8 +131,13 @@ jobs:
             ~/.local/share/yagna \
             examples/graceful-shutdown/*.log || true
 
-      - name: Upload logs
+      - name: Redact RPC credentials from logs
+        id: redact_logs
         if: always()
+        run: python advanced/redact_rpc_archive.py graceful_shutdown_logs.tar.zst
+
+      - name: Upload logs
+        if: always() && steps.redact_logs.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: graceful_shutdown_logs.tar.zst
