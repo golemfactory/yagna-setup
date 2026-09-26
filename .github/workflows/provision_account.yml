@@ -21,7 +21,11 @@ jobs:
 
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    env:
+      HOODI_GETH_ADDR: ${{ secrets.HOODI_GETH_ADDR }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Check how many accounts are provisioned
         id: check_count # Create an ID for the step so we can refer to its output
         run: |
@@ -41,6 +45,10 @@ jobs:
           tar -xf erc20_processor-linux-x86_64.tar.xz
           sudo cp erc20_processor /usr/bin/erc20_processor
           erc20_processor --version
+          curl --fail --silent --show-error --location \
+            https://raw.githubusercontent.com/golemfactory/erc20_payment_lib/v0.5.1/crates/erc20_payment_lib/config-payments.toml \
+            -o config-payments.toml
+          python advanced/configure_hoodi_rpc.py config-payments.toml
 
       - name: Give back up to 10 ethereum from used accounts
         continue-on-error: true
@@ -48,6 +56,7 @@ jobs:
           set -x
           for i in {1..10}; do
             mkdir -p back_$i && cd back_$i
+            cp ../config-payments.toml .
             curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/get/used_accounts > used_private_key.key
             echo "Used keys left $(curl -sSL -H "Authorization: Bearer ${{ secrets.PRIVATE_KEY_SERVER_KEY }}" https://polygongas.org/keys/count/unused_accounts)"
             # Check if the downloaded key is a valid private key
@@ -63,6 +72,7 @@ jobs:
         run: |
           for i in {1..10}; do
             mkdir -p funding_$i && cd funding_$i
+            cp ../config-payments.toml .
           
             erc20_processor generate-key -n 1 > .env
             erc20_processor get-dev-eth

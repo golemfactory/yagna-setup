@@ -17,6 +17,8 @@ jobs:
     name: Test transfer
     timeout-minutes: 20
     runs-on: ubuntu-latest
+    env:
+      HOODI_GETH_ADDR: ${{ secrets.HOODI_GETH_ADDR }}
     steps:
       - uses: actions/checkout@v4
 

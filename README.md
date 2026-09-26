@@ -121,3 +121,15 @@ into `golem/downloaded`.
 
 Bundles are downloaded directly from public GitHub releases; no token or GitHub
 CLI login is required. Override `YAGNA_TAG` to select another release.
+
+## Hoodi RPC
+
+Set `HOODI_GETH_ADDR=https://hoodi.infura.io/v3/<key>` in the ignored root
+`.env`. `advanced/prepare_runtime.py` copies this setting into generated
+requestor and provider environments; an exported `HOODI_GETH_ADDR` takes
+precedence. For the multi-allocation example, export the same setting or put
+it in that example's `.env`.
+
+GitHub Actions reads the full URL from the repository secret `HOODI_GETH_ADDR`.
+The provisioning workflow also patches its payment config because
+`erc20_processor` v0.5.1 does not support the Hoodi environment override.

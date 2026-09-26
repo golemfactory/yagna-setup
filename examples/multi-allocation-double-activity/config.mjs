@@ -1,3 +1,4 @@
+import "dotenv/config";
 import {privateKeyToAddress} from "viem/accounts";
 
 const config = {
@@ -11,7 +12,7 @@ const config = {
   spender: {
     address: process.env.SPENDER_ADDRESS,
   },
-  rpcUrl: "https://hoodi.rpc-node.dev.golem.network",
+  rpcUrl: process.env.HOODI_GETH_ADDR || "https://hoodi.rpc-node.dev.golem.network",
   lockPaymentContract: {
     hoodiAddress: "0x472ef33B51f65FB2aDa50ffeB0e4A72e9ac22f52",
   },
