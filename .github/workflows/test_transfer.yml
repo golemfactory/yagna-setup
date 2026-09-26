@@ -58,6 +58,8 @@ jobs:
             echo "YAGNA_APPKEY=66iiOdkvV29"
             echo "YA_PAYMENT_NETWORK=hoodi"
             echo "YAGNA_DEV_SKIP_ALLOCATION_VALIDATION=1"
+            # gftp runs outside this directory, so share an explicit bus address.
+            echo "GSB_URL=tcp://127.0.0.1:7464"
           } >> .env
           echo "----- requestor .env -----"
           cat .env
@@ -110,6 +112,8 @@ jobs:
         env:
           YAGNA_APPKEY: 66iiOdkvV29
           YA_PAYMENT_NETWORK: hoodi
+          # The SDK-spawned gftp must use the requestor's identity service.
+          GSB_URL: tcp://127.0.0.1:7464
 
 #### Stop services
 
