@@ -47,7 +47,7 @@ jobs:
     env:
       HOODI_GETH_ADDR: ${{ secrets.HOODI_GETH_ADDR }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
 #### prepare binaries
 
@@ -274,7 +274,7 @@ jobs:
 
       - name: Upload logs
         if: always() && steps.redact_logs.outcome == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: data_${{ matrix.id }}_${{env.CURRENT_DATE_FOR_UPLOAD}}.tar.xz
           path: data_${{ matrix.id }}.tar.xz
